@@ -4,32 +4,59 @@ import os
 import socket
 import time
 import select
+import sys
 
 
 UDP_PORT = 30015
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.setblocking(0)
-s.bind(('0.0.0.0', UDP_PORT))
-s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+count = 0
 
-i=0
+def server():
+	global count
+	print "Starting server"
+	serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	serverSocket.setblocking(0)
+	serverSocket.bind(('127.0.0.1', UDP_PORT))
+	#s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-while True:
-	print "Waiting for data"
-	ready = select.select([s],[],[], 3)
-	if ready[0]:
-		data, address = s.recvfrom(1024)
-		i = int(data.split()[1])		
-		print "Got data:", data
-	else:
-		print "Other process died"
-		break
+	while True:
+		print "Waiting for data"
+		ready = select.select([serverSocket],[],[], 3)
+		if ready[0]:
+			data, address = serverSocket.recvfrom(1024)
+			count = int(data.split()[1])		
+			print "Got data:", data
+		else:
+			print "Other process died"
+			
+			break
+			
+	serverSocket.close()
+	createDuplicate()
+	client()
 
-while True:
-	i += 1
-	data = "Count: "+str(i)
-	print data
-	s.sendto(data, ("129.241.187.255",UDP_PORT))
-	time.sleep(2)
+def client():
+	global count
+	print "Starting client"
+	clientSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	while True:
+		count += 1
+		data = "Count: "+str(count)
+		print data
+		clientSocket.sendto(data, ("127.0.0.1",UDP_PORT))
+		time.sleep(2)
+		
+	clientSocket.close()
 
+def createDuplicate():
+	print "Spawning subproccess"
+	os.popen('mate-terminal -x python2 /home/student/heislabv2014/Øving6/process_pairs.py &')
+	
+
+print len(sys.argv), sys.argv
+
+if len(sys.argv) > 1 and sys.argv[1] == "first":
+	createDuplicate()
+	client()
+else:
+	server()
