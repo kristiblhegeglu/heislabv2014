@@ -1,0 +1,99 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*- 
+import os
+import socket
+import time
+import select
+import sys
+import threading
+import json
+
+UDP_PORT = 34167
+
+# Get our IP by spamming google :D
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("gmail.com",80))
+our_ip = s.getsockname()[0]
+s.close()
+
+#lag og bind til server socket
+serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+serverSocket.bind(('0.0.0.0', UDP_PORT))
+serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+class Elevator:
+	def __init__(self, ip_address):
+		self.ip = ip_address
+		self.last_floor = -1
+		self.direction = -1
+		self.orders = []
+		self.last_ping = time.time()
+
+elevators = {}
+
+# starte tråd som tar imot meldinger
+def receiver():
+	while True:
+		data_text, address = serverSocket.recvfrom(1024)
+		if address[0] == our_ip:
+			continue
+		if len(data_text) < 2:
+			continue
+		data = json.loads(data_text)	
+		if data["type"] == "new_order":
+			print "We got a new order with floor:", data["floor"], "and button:", data["button"]	
+		elif data["type"] == "ping":
+			if not address[0] in elevators:
+				elevators[address[0]] = Elevator(address[0])
+				print "New elevator found, with ip:", address[0]
+			elevators[address[0]].last_ping = time.time()
+		else:
+			print "Received data from", address, "with payload:",data
+
+def send(data):
+	serverSocket.sendto(json.dumps(data), ("129.241.187.255",UDP_PORT))
+	
+# starte tråd som sender meldinger
+def sender():
+	while True:
+		data = {"type":"new_order","floor":1,"button":"up"}
+		send(data)
+		time.sleep(2)
+		
+def pinger():
+	while True:
+		data = {"type":"ping"}
+		send(data)
+		time.sleep(0.3)
+
+def connection_validator():
+	while True:
+		lost_ips = []
+		for ip in elevators:
+			elevator = elevators[ip]
+			if time.time() - elevator.last_ping > 2.0:
+				print "Lost elevator with ip:", ip
+				# TODO take over orders
+				lost_ips.append(ip)
+		
+		for ip in lost_ips:
+			del elevators[ip]
+	time.sleep(1.0)
+
+
+
+rec_thread = threading.Thread(target=receiver)
+rec_thread.daemon = True
+rec_thread.start()
+
+ping_thread = threading.Thread(target=pinger)
+ping_thread.daemon = True
+ping_thread.start()
+
+con_val_thread = threading.Thread(target=connection_validator)
+con_val_thread.daemon = True
+con_val_thread.start()
+
+#t2 = threading.Thread(target=sender)
+#t.start()
+sender()
