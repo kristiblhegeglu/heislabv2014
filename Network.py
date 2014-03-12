@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
 
+#djrhgzihrgøozihrgøoz
+
 import os
 import sys
 import socket
