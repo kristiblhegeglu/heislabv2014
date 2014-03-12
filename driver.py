@@ -19,11 +19,18 @@ last_floor = 0
 #elev.elev_set_speed(-300)
 
 def Init():
+  global last_floor
+  
   elev.elev_init()
   while(elev.elev_get_floor_sensor_signal() != 0):
     elev.elev_set_speed(-300)
   elev.elev_set_speed(0)
   time.sleep(3)
+  
+  shared.current_dir = shared.NODIR
+  shared.target_dir = shared.NODIR
+  last_floor = 0
+  
   return
 
 
@@ -82,4 +89,4 @@ def update_floor():
     return
   else:
     last_floor = floor
-
+    return last_floor

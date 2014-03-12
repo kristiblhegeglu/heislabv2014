@@ -3,9 +3,6 @@ import orderlist
 import time
 import driver
 
-elevator_current_dir = shared.NODIR
-elevator_target_dir = shared.NODIR
-
 def Init():
   return
   
@@ -18,18 +15,17 @@ def Start():
 
 
 def elevator_set_speed(speed):
-  global elevator_current_dir
-  global elevator_target_dir
+
   if (speed > 0):
-    elevator_current_dir = shared.UP
+    shared.current_dir = shared.UP
     driver.elev.elev_set_speed(300)
   
   else:
-    elevator_current_dir = shared.DOWN
+    shared.current_dir = shared.DOWN
     driver.elev.elev_set_speed(-300)
   
   if (speed == 0):
-    if (elevator_current_dir == shared.UP):
+    if (shared.current_dir == shared.UP):
       driver.elev.elev_set_speed(-300)
     
     else:
@@ -37,12 +33,17 @@ def elevator_set_speed(speed):
    
     time.sleep(0.05)
     driver.elev.elev_set_speed(0)
-    elevator_current_dir = shared.NODIR
+    shared.current_dir = shared.NODIR
   
   
-def elevator_should_stop(floor):
+def elevator_should_stop(floor,direction):
+  if (orderlist.orderlist_check_floor_dir(floor,shared.NODIR)):
+    return 1
+  if (orderlist.orderlist_check_floor_dir(floor,direction)):
+    return 1
   if (orderlist.orderlist_check_floor(floor)):
     return 1
+  return 0
   
   
 def elevator_observer():
@@ -67,13 +68,12 @@ def elevator_observer():
   
 
 def elevator_controller(floor, direction):
-  global elevator_current_dir
-  global elevator_target_dir
   # Drive elevator to order from orderlist
   if (orderlist.orderlist_has_order() == 0):
     elevator_set_speed(0)
-    elevator_target_dir = shared.NODIR
+    shared.target_dir = shared.NODIR
     return
+    
   target_floor = -1
   
   if(direction == shared.UP):
@@ -88,31 +88,40 @@ def elevator_controller(floor, direction):
   
   if (target_floor > floor):
     elevator_set_speed(300)
-    elevator_target_dir = shared.UP
+    shared.target_dir = shared.UP
     return
   
   elif (target_floor < floor):
     elevator_set_speed(-300)
-    elevator_target_dir = shared.DOWN
+    shared.target_dir = shared.DOWN
+    return
+  else:
+    if (driver.elev.elev_get_floor_sensor_signal() == -1):
+      elevator_set_speed(-300)
+      shared.target_dir = shared.NODIR
+    else:
+      elevator_set_speed(0)
+      shared.target_dir = shared.NODIR
     return
 
 
 def test():
-  driver.last_floor
-  global elevator_current_dir
-  global elevator_target_dir
+ 
+  
+  driver.Init()
   
   while (1):
     orderlist.orderlist_set_lights()
     orderlist.orderlist_get_order()
     
     driver.update_floor()
-    elevator_controller(driver.last_floor, elevator_target_dir)
-      
+    #elevator_controller(driver.last_floor, shared.target_dir)
+    print 'before second while loop'  
     while(driver.elev.elev_get_floor_sensor_signal == -1):
+      print 'hei, inni while loop'
       time.sleep(0.001)
     floor_reached = driver.elev.elev_get_floor_sensor_signal()
-    if(elevator_should_stop(floor_reached)):
+    if(elevator_should_stop(floor_reached, shared.target_dir)):
       elevator_set_speed(0)
     time.sleep(0.001)
   return 0

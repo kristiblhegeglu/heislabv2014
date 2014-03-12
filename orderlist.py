@@ -53,11 +53,11 @@ def orderlist_get_order():
     if(driver.elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
       orderlist_add_order(i,shared.NODIR)
       
-    elif(i < shared.N_FLOORS-1):
+    if(i < shared.N_FLOORS-1):
       if (driver.elev.elev_get_button_signal(shared.BUTTON_CALL_UP,i)):
 	orderlist_add_order(i,shared.UP)
       
-    elif(i > 0):
+    if(i > 0):
       if (driver.elev.elev_get_button_signal(shared.BUTTON_CALL_DOWN,i)):
 	orderlist_add_order(i,shared.DOWN)
     
@@ -80,30 +80,32 @@ def GetNextOrderToHandle():
     return order_map[key]
   return
 
+
+def orderlist_set_lights():
+  for i in range(shared.N_FLOORS):
+    if (orderlist_check_floor_dir(i,shared.NODIR)):
+      driver.elev.elev_set_button_lamp(shared.BUTTON_COMMAND, i, 1)
+    else:
+      driver.elev.elev_set_button_lamp(shared.BUTTON_COMMAND, i, 0)
+  
+  for i in range(shared.N_FLOORS-1):
+    if (orderlist_check_floor_dir(i,shared.UP)):
+      driver.elev.elev_set_button_lamp(shared.BUTTON_CALL_UP, i, 1)
+    else:
+      driver.elev.elev_set_button_lamp(shared.BUTTON_CALL_UP, i, 0)
+  
+  for i in range(1,shared.N_FLOORS):
+    if (orderlist_check_floor_dir(i,shared.DOWN)):
+      driver.elev.elev_set_button_lamp(shared.BUTTON_CALL_DOWN, i, 1)
+    else:
+      driver.elev.elev_set_button_lamp(shared.BUTTON_CALL_DOWN, i, 0)
+  
+  driver.elev.elev_set_floor_indicator(driver.last_floor)
+  
+  
   
 orderlist_add_order(3,shared.UP)
 for key in order_map:
   print order_map[key].direction
 
-
-def orderlist_set_lights():
-  i = 0
-  for i in range(shared.N_FLOORS):
-    if (orderlist_check_floor_dir(i,shared.NODIR)):
-      elev.elev_set_button_lamp(shared.BUTTON_COMMAND, i, 1)
-    else:
-      elev.elev_set_button_lamp(BUTTON_COMMAND, i, 0)
-      
-  for i in range(shared.N_FLOORS-1):
-    if (orderlist_check_floor_dir(i,shared.UP)):
-      elev.elev_set_button_lamp(shared.BUTTON_CALL_UP, i, 1)
-    else:
-      elev.elev_set_button_lamp(BUTTON_CALL_UP, i, 0)
-  
-  for i in range(1,shared.N_FLOORS):
-    if (orderlist_check_floor_dir(i,shared.DOWN)):
-      elev.elev_set_button_lamp(shared.BUTTON_CALL_DOWN, i, 1)
-    else:
-      elev.elev_set_button_lamp(BUTTON_CALL_DOWN, i, 0)
-  
-  elev.elev_set_floor_indicator(last_floor)
+orderlist_get_order()

@@ -1,14 +1,17 @@
 import random
 
 N_FLOORS = 4
-BUTTON_COMMAND = 0
-BUTTON_CALL_UP = 1
-BUTTON_CALL_DOWN = 2
 
-NODIR = 0
-UP = 1
-DOWN = 2
+BUTTON_CALL_UP = 0
+BUTTON_CALL_DOWN = 1
+BUTTON_COMMAND = 2
 
+UP = 0
+DOWN = 1
+NODIR = 2
+
+current_dir = NODIR
+target_dir = NODIR
 
 class ElevatorState:
   def __init__(self):
