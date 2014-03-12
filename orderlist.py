@@ -1,5 +1,4 @@
 import shared
-
 import driver
 
 class Order:
@@ -21,14 +20,25 @@ def Init():
 
 
 def orderlist_check_floor(floor):
+  global order_map
   if floor < 0:
     return 0
   if (orderlist_has_order() == 0):
     return 0
-  elif (orderlist_has_order() == 1):
+  else:                                 # (orderlist_has_order() == 1)
     for key in order_map:
-      if order_map[key] == floor:
+      if order_map[key].floor == floor:
 	return 1
+
+def orderlist_check_floor_dir(floor,direction):
+  global order_map
+  if (floor < 0):
+    return 0
+  for key in order_map:
+    if (orderlist_has_order() == 0):
+      continue
+    if (order_map[key].floor == floor) and (order_map[key].direction == direction):
+      return 1 
 
 def orderlist_has_order():
   global order_map
@@ -38,22 +48,25 @@ def orderlist_has_order():
     return 1                           #order_map has orders
 
     
-def ordelist_get_order():
+def orderlist_get_order():
   for i in range(shared.N_FLOORS):
-    if(elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
-      orderlist_add_order(i,NODIR)
+    if(driver.elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
+      orderlist_add_order(i,shared.NODIR)
       
-    elif(elev.elev_get_button_signal(shared.BUTTON_CALL_UP,i)):
-      orderlist_add_order(i,UP)
+    elif(i < shared.N_FLOORS-1):
+      if (driver.elev.elev_get_button_signal(shared.BUTTON_CALL_UP,i)):
+	orderlist_add_order(i,shared.UP)
       
-    elif(elev.elev_get_button_signal(shared.BUTTON_CALL_DOWN,i)):
-      orderlist_add_order(i,DOWN)
+    elif(i > 0):
+      if (driver.elev.elev_get_button_signal(shared.BUTTON_CALL_DOWN,i)):
+	orderlist_add_order(i,shared.DOWN)
     
     
 # Create an order from the local elevator
 def orderlist_add_order(floor, direction):
+  global order_map
   new_order = Order(shared.GetLocalElevatorId(), floor, direction)
-  order_map[o.ID] = new_order
+  order_map[new_order.ID] = new_order
   print "New order: ", new_order
   #network.SendOrderMessage(o)
 
@@ -66,3 +79,31 @@ def GetNextOrderToHandle():
   for key in order_map:
     return order_map[key]
   return
+
+  
+orderlist_add_order(3,shared.UP)
+for key in order_map:
+  print order_map[key].direction
+
+
+def orderlist_set_lights():
+  i = 0
+  for i in range(shared.N_FLOORS):
+    if (orderlist_check_floor_dir(i,shared.NODIR)):
+      elev.elev_set_button_lamp(shared.BUTTON_COMMAND, i, 1)
+    else:
+      elev.elev_set_button_lamp(BUTTON_COMMAND, i, 0)
+      
+  for i in range(shared.N_FLOORS-1):
+    if (orderlist_check_floor_dir(i,shared.UP)):
+      elev.elev_set_button_lamp(shared.BUTTON_CALL_UP, i, 1)
+    else:
+      elev.elev_set_button_lamp(BUTTON_CALL_UP, i, 0)
+  
+  for i in range(1,shared.N_FLOORS):
+    if (orderlist_check_floor_dir(i,shared.DOWN)):
+      elev.elev_set_button_lamp(shared.BUTTON_CALL_DOWN, i, 1)
+    else:
+      elev.elev_set_button_lamp(BUTTON_CALL_DOWN, i, 0)
+  
+  elev.elev_set_floor_indicator(last_floor)
