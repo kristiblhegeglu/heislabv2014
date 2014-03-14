@@ -68,6 +68,7 @@ def orderlist_add_order(floor, direction):
   new_order = Order(shared.GetLocalElevatorId(), floor, direction)
   order_map[new_order.ID] = new_order
   print "New order: ", new_order
+  print "New order with floor:",new_order.floor," and direction:",new_order.direction
   #network.SendOrderMessage(o)
 
 def MergeNetworkOrder(order):

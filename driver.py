@@ -24,12 +24,15 @@ def Init():
   elev.elev_init()
   while(elev.elev_get_floor_sensor_signal() != 0):
     elev.elev_set_speed(-300)
+  elev.elev_set_speed(300)
+  time.sleep(0.002)
   elev.elev_set_speed(0)
-  time.sleep(3)
   
   shared.current_dir = shared.NODIR
   shared.target_dir = shared.NODIR
   last_floor = 0
+  
+  time.sleep(3)
   
   return
 
@@ -65,7 +68,6 @@ def main():
     #update_floor()
     #set_lights()
 
-  return 0
   
   
 def test():

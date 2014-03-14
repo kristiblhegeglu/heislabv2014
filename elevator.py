@@ -20,7 +20,7 @@ def elevator_set_speed(speed):
     shared.current_dir = shared.UP
     driver.elev.elev_set_speed(300)
   
-  else:
+  elif (speed < 0):
     shared.current_dir = shared.DOWN
     driver.elev.elev_set_speed(-300)
   
@@ -28,10 +28,10 @@ def elevator_set_speed(speed):
     if (shared.current_dir == shared.UP):
       driver.elev.elev_set_speed(-300)
     
-    else:
+    elif (shared.current_dir == shared.DOWN):
       driver.elev.elev_set_speed(300)
    
-    time.sleep(0.05)
+    time.sleep(0.5)
     driver.elev.elev_set_speed(0)
     shared.current_dir = shared.NODIR
   
@@ -79,12 +79,28 @@ def elevator_controller(floor, direction):
   if(direction == shared.UP):
     for i in range(shared.N_FLOORS):
       if (orderlist.orderlist_check_floor(i)):
-	target_floor = i
+		  target_floor = i
   
   elif (direction == shared.DOWN):
     for i in range(shared.N_FLOORS):
       if (orderlist.orderlist_check_floor(i)):
-	target_floor = i
+		  target_floor = i
+  
+  if (direction == shared.NODIR) and (target_floor == -1):
+	  min_distance = 999999
+	  for i in range(shared.N_FLOORS):
+		  if (orderlist.orderlist_check_floor(i) == 0):
+			  continue
+		  distance = (floor-i)*(floor-1)
+		  if (distance < min_distance):
+			  target_floor = i
+			  min_distance = distance
+
+  if (target_floor == -1):
+	  print "This should not happen!"
+	  elevator_set_speed(0)
+	  shared.target_dir = shared.NODIR
+	  return
   
   if (target_floor > floor):
     elevator_set_speed(300)
@@ -95,6 +111,7 @@ def elevator_controller(floor, direction):
     elevator_set_speed(-300)
     shared.target_dir = shared.DOWN
     return
+    
   else:
     if (driver.elev.elev_get_floor_sensor_signal() == -1):
       elevator_set_speed(-300)
@@ -115,11 +132,14 @@ def test():
     orderlist.orderlist_get_order()
     
     driver.update_floor()
-    #elevator_controller(driver.last_floor, shared.target_dir)
+    elevator_controller(driver.last_floor, shared.target_dir)
     print 'before second while loop'  
+    print driver.elev.elev_get_floor_sensor_signal()
+    
     while(driver.elev.elev_get_floor_sensor_signal == -1):
-      print 'hei, inni while loop'
+      print 'hei, vent'
       time.sleep(0.001)
+      
     floor_reached = driver.elev.elev_get_floor_sensor_signal()
     if(elevator_should_stop(floor_reached, shared.target_dir)):
       elevator_set_speed(0)
