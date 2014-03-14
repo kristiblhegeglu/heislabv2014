@@ -1,5 +1,10 @@
 import random
 
+import ctypes
+
+ctypes.cdll.LoadLibrary("./elev.so")
+elev = ctypes.CDLL("./elev.so")
+
 N_FLOORS = 4
 
 BUTTON_CALL_UP = 0
@@ -12,6 +17,8 @@ NODIR = 2
 
 current_dir = NODIR
 target_dir = NODIR
+
+last_floor = 0
 
 class ElevatorState:
   def __init__(self):

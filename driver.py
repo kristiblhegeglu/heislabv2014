@@ -1,14 +1,8 @@
 import shared
+import elevator
+import orderlist
 import time
-
-
-import ctypes
-
-ctypes.cdll.LoadLibrary("./elev.so")
-elev = ctypes.CDLL("./elev.so")
-
-last_floor = 0
-
+import threading
 
 
 
@@ -18,77 +12,61 @@ last_floor = 0
   
 #elev.elev_set_speed(-300)
 
-def Init():
-  global last_floor
+def Io():
+  while(True):
+    orderlist.orderlist_get_order()
+    orderlist.orderlist_set_lights()
+    orderlist.orderlist_update_floor()
+    
+    time.sleep(0.01)
+    
+  return 
   
-  elev.elev_init()
-  while(elev.elev_get_floor_sensor_signal() != 0):
-    elev.elev_set_speed(-300)
-  elev.elev_set_speed(300)
-  time.sleep(0.002)
-  elev.elev_set_speed(0)
   
-  shared.current_dir = shared.NODIR
-  shared.target_dir = shared.NODIR
-  last_floor = 0
+def Statemachine():
+  while (True):
+    
+    while not(orderlist.orderlist_not_empty()):
+      time.sleep(0.001)
+    print "target dir22312313: ",shared.target_dir  
+    elevator.elevator_controller(shared.last_floor, shared.target_dir)
+    print 'before second while loop'  
+    print shared.elev.elev_get_floor_sensor_signal()
+    
+    while(shared.elev.elev_get_floor_sensor_signal == -1):
+      print 'hei, vent'
+      time.sleep(0.001)
+      
+    floor_reached = shared.elev.elev_get_floor_sensor_signal()
+    if(elevator.elevator_should_stop(floor_reached, shared.current_dir)):
+      #orderlist.orderlist_check_finished(floor_reached, shared.current_dir)
+      print "burde stoppe"
+      elevator.elevator_set_speed(0)
+      print "current_dir: ",shared.current_dir
+      
+    time.sleep(0.001)
+    print "current_dir: ",shared.current_dir
+    #print "floor reached: ",floor_reached
+  return 
   
-  time.sleep(3)
   
-  return
+Io_thread = threading.Thread(target = Io)
+Io_thread.daemon = True
 
-
+Statemachine_thread = threading.Thread(target = Statemachine)
+Statemachine_thread.daemon = True
+  
 
 def main():
-  global elevator_current_dir
-  global elevator_target_dir
-  # Initialize hardware
-  if elev.elev_init() == 0:
-    print "Failed to initialize"
-    return 1
-    exit()
-  
-  print("Press STOP button to stop elevator and exit program.\n")
-  
-  Init()								#Drive down to first floor
-  
-  while (1):
-    update_floor()
-    elevator.elevator_controller(last_floor, elevator.elevator_target_dir)
+  elevator.Init()
     
-    while(elev.elev_get_floor_sensor_signal == -1):
-      time.sleep(0.001)
-    floor_reached = elev.elev_get_floor_sensor_signal()
-    if(elevator.elevator_should_stop(floor_reached)):
-      elev.elev_set_speed(0)
-    time.sleep(0.001)
-  return 0
+  Io_thread.start()
+  #Statemachine_thread.start()
+  #Io()
+  Statemachine()
+  
+  return 
       
 
-  #while (1):
-    #update_floor()
-    #set_lights()
 
-  
-  
-def test():
-  if (elev.elev_get_floor_sensor_signal() == 0):
-    elev.elev_set_speed(300)
-      
-  elif (elev.elev_get_floor_sensor_signal() == shared.N_FLOORS-1):
-    elev.elev_set_speed(-300)
-
-  if (elev.elev_get_stop_signal()):
-    elev.elev_set_speed(0)
-  return
-  
-  
-  
-def update_floor():
-  global last_floor
-  
-  floor = elev.elev_get_floor_sensor_signal()
-  if (floor == -1):
-    return
-  else:
-    last_floor = floor
-    return last_floor
+main()
