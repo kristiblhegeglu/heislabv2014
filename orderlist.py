@@ -30,7 +30,7 @@ def orderlist_check_floor(floor):
   else:                                 # (orderlist_not_empty() == 1)
     for key in order_map:
       if order_map[key].floor == floor:
-		  return True
+        return True
     return False
 
 def orderlist_check_floor_dir(floor,direction):
@@ -58,11 +58,11 @@ def orderlist_get_order():
       
     if(i < shared.N_FLOORS-1):
       if (shared.elev.elev_get_button_signal(shared.BUTTON_CALL_UP,i)):
-				orderlist_add_order(i,shared.UP)
+        orderlist_add_order(i,shared.UP)
       
     if(i > 0):
       if (shared.elev.elev_get_button_signal(shared.BUTTON_CALL_DOWN,i)):
-				orderlist_add_order(i,shared.DOWN)
+        orderlist_add_order(i,shared.DOWN)
   return
     
     
@@ -71,8 +71,8 @@ def orderlist_add_order(floor, direction):
   global order_map
   
   if (orderlist_check_floor_dir(floor, direction)):
-	  return
-	  
+    return
+    
   new_order = Order(shared.GetLocalElevatorId(), floor, direction)
   order_map[new_order.ID] = new_order
   print "New order: ", new_order
@@ -87,12 +87,15 @@ def orderlist_check_finished(floor, direction):
     orderlist_delete_order(floor, shared.UP)
   elif(orderlist_check_floor_dir(floor, shared.DOWN)):
     orderlist_delete_order(floor, shared.DOWN)
+  elif not (elevator.elevator_check_dir(floor,direction)):
+    orderlist_delete_order(floor, shared.UP)
+    orderlist_delete_order(floor, shared.DOWN)
   
   
 def orderlist_delete_order(floor, direction):
-  for key in order_map:
+  for key in order_map.keys():
     if (order_map[key].floor == floor) and (order_map[key].direction == direction):
-      #print "slettet ordre med floor:", order_map[key].floor "and direction:", order_map[key].direction
+      print "slettet ordre med floor:", order_map[key].floor, "and direction:", order_map[key].direction
       del order_map[key]
       
   

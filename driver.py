@@ -15,8 +15,8 @@ import threading
 def Io():
   while(True):
     orderlist.orderlist_get_order()
-    orderlist.orderlist_set_lights()
     orderlist.orderlist_update_floor()
+    orderlist.orderlist_set_lights()
     
     time.sleep(0.01)
     
@@ -39,10 +39,11 @@ def Statemachine():
       
     floor_reached = shared.elev.elev_get_floor_sensor_signal()
     if(elevator.elevator_should_stop(floor_reached, shared.current_dir)):
-      #orderlist.orderlist_check_finished(floor_reached, shared.current_dir)
       print "burde stoppe"
       elevator.elevator_set_speed(0)
       print "current_dir: ",shared.current_dir
+      orderlist.orderlist_check_finished(floor_reached, shared.current_dir)
+      elevator.elevator_open_door()
       
     time.sleep(0.001)
     print "current_dir: ",shared.current_dir
