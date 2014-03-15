@@ -1,6 +1,7 @@
 import shared
 import elevator
 import orderlist
+import tull
 import time
 import threading
 
@@ -26,27 +27,22 @@ def Io():
 def Statemachine():
   while (True):
     
-    while not(orderlist.orderlist_not_empty()):
+    while (orderlist.orderlist_empty()):
       time.sleep(0.001)
-    print "target dir22312313: ",shared.target_dir  
     elevator.elevator_controller(shared.last_floor, shared.target_dir)
-    print 'before second while loop'  
     print shared.elev.elev_get_floor_sensor_signal()
     
     while(shared.elev.elev_get_floor_sensor_signal == -1):
-      print 'hei, vent'
       time.sleep(0.001)
       
     floor_reached = shared.elev.elev_get_floor_sensor_signal()
     if(elevator.elevator_should_stop(floor_reached, shared.current_dir)):
-      print "burde stoppe"
       elevator.elevator_set_speed(0)
-      print "current_dir: ",shared.current_dir
+      
       orderlist.orderlist_check_finished(floor_reached, shared.current_dir)
       elevator.elevator_open_door()
       
     time.sleep(0.001)
-    print "current_dir: ",shared.current_dir
     #print "floor reached: ",floor_reached
   return 
   
@@ -62,9 +58,20 @@ def main():
   elevator.Init()
     
   Io_thread.start()
-  #Statemachine_thread.start()
+  Statemachine_thread.daemon = False
+  Statemachine_thread.start()
+  tull.receiver_thread.start()
+  tull.sending_thread.start()
+
+  
   #Io()
-  Statemachine()
+  #Statemachine()
+  
+  #while True:
+  #  print "All orders:" 
+  #  for key in orderlist.order_map:
+  #    print "Order:", orderlist.order_map[key].__dict__
+  #  time.sleep(2)
   
   return 
       

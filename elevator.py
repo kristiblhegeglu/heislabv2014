@@ -106,7 +106,7 @@ def elevator_observer():
 
 def elevator_controller(floor, direction):
   # Drive elevator to order from orderlist
-  if not (orderlist.orderlist_not_empty()):				#If orderlist is empty, set direction to NODIR and speed to 0
+  if (orderlist.orderlist_empty()):				#If orderlist is empty, set direction to NODIR and speed to 0
     elevator_set_speed(0)
     shared.target_dir = shared.NODIR
     return
@@ -117,7 +117,6 @@ def elevator_controller(floor, direction):
     for i in range(shared.N_FLOORS):
       if (orderlist.orderlist_check_floor(i)):
         target_floor = i
-        print "Target floor", target_floor
   
   elif (direction == shared.DOWN):
     for i in range(shared.N_FLOORS):
@@ -133,23 +132,20 @@ def elevator_controller(floor, direction):
       if (distance < min_distance):
         target_floor = i
         min_distance = distance
-        print "Target floor2", target_floor
 
-  if (target_floor == -1):
-    print "This should not happen!"
+  if (target_floor == -1) and (orderlist.orderlist_completed()):
+    #print "This should not happen!"
     elevator_set_speed(0)
     shared.target_dir = shared.NODIR
     return
   
   if (target_floor > floor):
     elevator_set_speed(300)
-    print "Target floor3", target_floor
     shared.target_dir = shared.UP
     return
     
   
   elif (target_floor < floor):
-    print "Target floor3 blehd", target_floor
     elevator_set_speed(-300)
     shared.target_dir = shared.DOWN
     return
@@ -157,7 +153,6 @@ def elevator_controller(floor, direction):
   elif (target_floor == floor):
     if (shared.elev.elev_get_floor_sensor_signal() == -1):
       elevator_set_speed(-300)
-      print "fgsgrsgrsgreg"
       shared.target_dir = shared.NODIR
     else:
       elevator_set_speed(0)

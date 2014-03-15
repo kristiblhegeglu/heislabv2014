@@ -3,11 +3,12 @@ import shared
 
 
 class Order:
-  def __init__(self, creatorID, floor, direction):
+  def __init__(self, creatorID, floor, direction, completed):
     self.ID = shared.CreateRandomID()
     self.creatorID = creatorID
     self.floor = floor
     self.direction = direction
+    self.completed = False
     # OSV
     
 
@@ -25,10 +26,12 @@ def orderlist_check_floor(floor):
   
   if floor < 0:
     return False
-  if not (orderlist_not_empty()):
+  if (orderlist_empty()):
     return False
-  else:                                 # (orderlist_not_empty() == 1)
+  else:                                 # (orderlist_empty() == 0)
     for key in order_map:
+      if order_map[key].completed:
+        continue
       if order_map[key].floor == floor:
         return True
     return False
@@ -38,18 +41,27 @@ def orderlist_check_floor_dir(floor,direction):
   if (floor < 0):
     return False
   for key in order_map:
-    if not (orderlist_not_empty()):
-      continue
+    if order_map[key].completed:
+        continue
     if (order_map[key].floor == floor) and (order_map[key].direction == direction):
       return True 
+  return False
 
-def orderlist_not_empty():
+def orderlist_empty():
   global order_map
   if len(order_map) == 0:
-    return False                           #order_map is empty, no orders
+    return True                           #order_map is empty, no orders
   else:
-    return True                         #order_map has orders
+    return False                         #order_map has orders
 
+
+def orderlist_completed():
+  global order_map
+  for key,order in order_map.iteritems():
+    if (order.completed == True):
+      return True
+  return False
+    
     
 def orderlist_get_order():
   for i in range(shared.N_FLOORS):
@@ -73,24 +85,20 @@ def orderlist_add_order(floor, direction):
   if (orderlist_check_floor_dir(floor, direction)):
     return
     
-  new_order = Order(shared.GetLocalElevatorId(), floor, direction)
+  new_order = Order(shared.GetLocalElevatorId(), floor, direction, False)
   order_map[new_order.ID] = new_order
-  print "New order: ", new_order
   print "New order with floor:",new_order.floor," and direction:",new_order.direction
   return
 
 
 def orderlist_check_finished(floor, direction):
-  if(orderlist_check_floor_dir(floor, shared.NODIR)):
-    orderlist_delete_order(floor, shared.NODIR)
-  elif(orderlist_check_floor_dir(floor, shared.UP)):
-    orderlist_delete_order(floor, shared.UP)
-  elif(orderlist_check_floor_dir(floor, shared.DOWN)):
-    orderlist_delete_order(floor, shared.DOWN)
-  elif not (elevator.elevator_check_dir(floor,direction)):
-    orderlist_delete_order(floor, shared.UP)
-    orderlist_delete_order(floor, shared.DOWN)
-  
+  global order_map
+  print "Should complete on floor", floor, "and dir", direction
+  for key,order in order_map.iteritems():
+    if order.floor == floor: # and order.direction == direction:
+      print "Order completed"
+      order.completed = True
+    
   
 def orderlist_delete_order(floor, direction):
   for key in order_map.keys():
