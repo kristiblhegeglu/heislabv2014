@@ -6,6 +6,10 @@ import time
 
 
 def Init():
+  if not(driver.elev.elev_init()):
+    print "Failed to initialize"
+    exit()
+  
   driver.elev.elev_init()
   while(driver.elev.elev_get_floor_sensor_signal() != 0):
     driver.elev.elev_set_speed(-300)

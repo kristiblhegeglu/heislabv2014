@@ -162,7 +162,9 @@ def orderlist_set_lights():
   driver.elev.elev_set_floor_indicator(shared.last_floor)
   return
   
-  
+def GetOrderMap():
+  global order_map
+  return order_map
   
 #orderlist_add_order(3,shared.UP)
 #for key in order_map:

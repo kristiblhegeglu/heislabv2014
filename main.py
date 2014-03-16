@@ -5,6 +5,7 @@ import time
 import threading
 import driver
 import initialization
+import tull
 
 
 def Io():
@@ -24,7 +25,7 @@ def Statemachine():
     while (orderlist.orderlist_empty()):
       time.sleep(0.001)
     elevator.elevator_controller(shared.last_floor, shared.target_dir)
-    print driver.elev.elev_get_floor_sensor_signal()
+    #print driver.elev.elev_get_floor_sensor_signal()
     
     while(driver.elev.elev_get_floor_sensor_signal == -1):
       time.sleep(0.001)
@@ -41,34 +42,44 @@ def Statemachine():
   return 
   
   
-Io_thread = threading.Thread(target = Io)
-Io_thread.daemon = True
 
-Statemachine_thread = threading.Thread(target = Statemachine)
-Statemachine_thread.daemon = True
+
   
 
 def main():
+  shared.Init()
   initialization.Initialization()
-    
+  
+  
+  
+  Io_thread = threading.Thread(target = Io)
+  Io_thread.daemon = True
   Io_thread.start()
-  Statemachine_thread.daemon = False
+  
+  Statemachine_thread = threading.Thread(target = Statemachine)
+  Statemachine_thread.daemon = True
+  #Statemachine_thread.daemon = False
   Statemachine_thread.start()
-  #tull.receiver_thread.start()
-  #tull.sending_thread.start()
+  
+  
+  tull.net_start()
+  #tull.network_sending()
 
   
   #Io()
   #Statemachine()
   
-  #while True:
-  #  print "All orders:" 
-  #  for key in orderlist.order_map:
-  #    print "Order:", orderlist.order_map[key].__dict__
-  #  time.sleep(2)
-  
+  while True:
+    cmd = raw_input("Type a command")
+    if cmd == "list_orders":
+      for key in orderlist.order_map:
+        print "Order:", orderlist.order_map[key].__dict__
+        
   return 
       
 
 
-main()
+
+
+if __name__ == "__main__":
+  main()
