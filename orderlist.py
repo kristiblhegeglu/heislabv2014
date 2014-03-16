@@ -130,7 +130,14 @@ def orderlist_update_floor():
   #network.SendOrderMessage(o)
 
 def MergeNetworkOrder(order):
-  order_map[order.ID] = order
+  if not order.ID in order_map:
+    order_map[order.ID] = order
+    return
+  
+  local_order = order_map[order.ID]
+  if order.completed:
+    local_order.completed = True
+  
   return
 
 # Get order local elevator should execute

@@ -70,7 +70,7 @@ def convert_to_ordinary_dict(msg_dict):
     #print order_dict
     order = orderlist.Order(order_dict["creatorID"],order_dict["floor"], order_dict["direction"], order_dict["completed"])
     order.ID = order_dict["ID"]
-    orderlist.GetOrderMap()[order.ID] = order
+    orderlist.MergeNetworkOrder(order)
     print "Test2"
     
 
