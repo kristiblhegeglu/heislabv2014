@@ -16,8 +16,14 @@ UDP_PORT = 31715
 our_ip = 0
 
     
-
-
+def Init():
+  #Creating a socket, bind, opening for broadcast
+  global network_socket
+  network_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  network_socket.bind(('0.0.0.0', UDP_PORT))
+  network_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)   
+  
+  return
 
 #Function for sending messages
 def network_sender(data):
@@ -42,7 +48,7 @@ def send_orderlist(order_map):
 def network_receiver():
   global our_ip
   while True:
-    msg, address = network_socket.recvfrom(1024)    #receive messages, storing in msg and address, max size 1024 bit
+    msg, address = network_socket.recvfrom(32000)    #receive messages, storing in msg and address, max size 32000 bit
     if address[0] == our_ip:
       continue
     if len(msg) < 2:
@@ -59,18 +65,18 @@ def network_receiver():
 
 def network_receiver_order(msg_dict):
   print "Received order with floor=",msg_dict["floor"],"and direction=",msg_dict["direction"]
-  order = orderlist.Order(msg_dict["creatorID"], msg_dict["floor"], msg_dict["direction"], msg_dict["completed"])
+  order = orderlist.Order(msg_dict["creatorID"], msg_dict["floor"], msg_dict["direction"], msg_dict["completed"],msg_dict["time_completed"])
   order.ID = msg_dict["ID"]
-  orderlist.GetOrderMap()[order.ID] = order
+  orderlist.orderlist_get_order_map()[order.ID] = order
   
-  print orderlist.GetOrderMap()
+  print orderlist.orderlist_get_order_map()
   
 def convert_to_ordinary_dict(msg_dict):
   for order_dict in msg_dict["orders"]:
     #print order_dict
-    order = orderlist.Order(order_dict["creatorID"],order_dict["floor"], order_dict["direction"], order_dict["completed"])
+    order = orderlist.Order(order_dict["creatorID"],order_dict["floor"], order_dict["direction"], order_dict["completed"],order_dict["time_completed"])
     order.ID = order_dict["ID"]
-    orderlist.MergeNetworkOrder(order)
+    orderlist.merge_network(order)
     print "Test2"
     
 
@@ -88,7 +94,7 @@ def network_local_ip():
 def network_sending():
   while(True):
     
-    send_orderlist(orderlist.GetOrderMap())
+    send_orderlist(orderlist.orderlist_get_order_map())
     print "Sender ordre"
     time.sleep(2)
   return
@@ -96,14 +102,11 @@ def network_sending():
 
 
 def net_start():
-  global network_socket
+  #global network_socket
   
   network_local_ip()
   
-  #Creating a socket, bind, opening for broadcast 
-  network_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  network_socket.bind(('0.0.0.0', UDP_PORT))
-  network_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)    
+ 
   
   receiver_thread = threading.Thread(target = network_receiver)
   receiver_thread.start()

@@ -47,7 +47,6 @@ def Statemachine():
   
 
 def main():
-  shared.Init()
   initialization.Initialization()
   
   
@@ -65,6 +64,7 @@ def main():
   tull.net_start()
   #tull.network_sending()
 
+  orderlist.orderlist_del_thread()
   
   #Io()
   #Statemachine()

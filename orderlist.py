@@ -1,15 +1,19 @@
 import shared
 import driver
 
+import time
+import threading
+
 
 
 class Order:
-  def __init__(self, creatorID, floor, direction, completed):
+  def __init__(self, creatorID, floor, direction, completed, time_completed):
     self.ID = shared.CreateRandomID()
     self.creatorID = creatorID
     self.floor = floor
     self.direction = direction
     self.completed = False
+    self.time_completed = time_completed
     # OSV
     
   def ToString(self):
@@ -94,7 +98,7 @@ def orderlist_add_order(floor, direction):
   if (orderlist_check_floor_dir(floor, direction)):
     return
     
-  new_order = Order(shared.GetLocalElevatorId(), floor, direction, False)
+  new_order = Order(shared.GetLocalElevatorId(), floor, direction, False,0)
   order_map[new_order.ID] = new_order
   print "New order with floor:",new_order.floor," and direction:",new_order.direction
   return
@@ -107,14 +111,17 @@ def orderlist_check_finished(floor, direction):
     if order.floor == floor: # and order.direction == direction:
       print "Order completed"
       order.completed = True
+      order.time_completed = time.time()
+      
     
   
-def orderlist_delete_order(floor, direction):
+def orderlist_delete_order():
   global order_map
-  for key in order_map.keys():
-    if (order_map[key].floor == floor) and (order_map[key].direction == direction):
-      print "slettet ordre med floor:", order_map[key].floor, "and direction:", order_map[key].direction
-      del order_map[key]
+  while True:
+    for key in order_map.keys():
+      if (order_map[key].completed) and (time.time() - order_map[key].time_completed > 14):
+        del order_map[key]
+    time.sleep(10)
       
   
   
@@ -129,22 +136,17 @@ def orderlist_update_floor():
     
   #network.SendOrderMessage(o)
 
-def MergeNetworkOrder(order):
-  if not order.ID in order_map:
+def orderlist_merge_network(order):
+  if not (order.ID in order_map):
     order_map[order.ID] = order
     return
   
   local_order = order_map[order.ID]
-  if order.completed:
-    local_order.completed = True
+  if (order.completed):
+    local_order.completed 
   
   return
 
-# Get order local elevator should execute
-def GetNextOrderToHandle():
-  for key in order_map:
-    return order_map[key]
-  return
 
 
 def orderlist_set_lights():
@@ -169,7 +171,7 @@ def orderlist_set_lights():
   driver.elev.elev_set_floor_indicator(shared.last_floor)
   return
   
-def GetOrderMap():
+def orderlist_get_order_map():
   global order_map
   return order_map
   
@@ -178,3 +180,14 @@ def GetOrderMap():
 #  print order_map[key].direction
 
 #orderlist_get_order()
+
+def orderlist_del_thread():
+  orderlist_thread = threading.Thread(target = orderlist_delete_order)
+  orderlist_thread.daemon = True
+  orderlist_thread.start()
+  
+  return
+
+if __name__ == "__main__":
+  orderlist_del_thread
+

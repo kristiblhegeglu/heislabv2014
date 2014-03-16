@@ -48,7 +48,6 @@ def elevator_set_speed(speed):
   
   elif (speed < 0):
     shared.current_dir = shared.DOWN
-    print "jeg skal ned ikke i disko!"
     driver.elev.elev_set_speed(-300)
   
   if (speed == 0):
