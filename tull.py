@@ -8,34 +8,14 @@ import orderlist
 import time
 import json
 import threading
+import orderlist
+
 
 UDP_PORT = 31212
 
-class Order:
-  def __init__(self, creatorID, floor, direction, completed):
-    self.ID = CreateRandomID()
-    self.creatorID = creatorID
-    self.floor = floor
-    self.direction = direction
-    self.completed = False
-  
-  def ToString(self):
-    return "Order[floor:"+str(self.floor)+",direction="+str(self.direction)+"]"
-  
-  def ToJson(self):
-    order_dict = self.__dict__
-    order_dict["type"] = "order"
-    return json.dumps(order_dict)
-
 order_map = {}
 our_ip = 0
-    
-def CreateRandomID():
-  return random.randint(0, 1000000000)
 
-def GetLocalElevatorId():
-  LocalElevatorID = random.randint(0,1000000000)
-  return LocalElevatorID
     
 
 

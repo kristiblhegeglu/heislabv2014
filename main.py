@@ -4,6 +4,7 @@ import orderlist
 import time
 import threading
 import driver
+import initialization
 
 
 def Io():
@@ -48,7 +49,7 @@ Statemachine_thread.daemon = True
   
 
 def main():
-  elevator.Init()
+  initialization.Initialization()
     
   Io_thread.start()
   Statemachine_thread.daemon = False
