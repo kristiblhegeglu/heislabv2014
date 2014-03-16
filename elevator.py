@@ -1,15 +1,17 @@
 import shared
 import orderlist
+import driver
 import time
 
 
+
 def Init():
-  shared.elev.elev_init()
-  while(shared.elev.elev_get_floor_sensor_signal() != 0):
-    shared.elev.elev_set_speed(-300)
-  shared.elev.elev_set_speed(300)
+  driver.elev.elev_init()
+  while(driver.elev.elev_get_floor_sensor_signal() != 0):
+    driver.elev.elev_set_speed(-300)
+  driver.elev.elev_set_speed(300)
   time.sleep(0.005)
-  shared.elev.elev_set_speed(0)
+  driver.elev.elev_set_speed(0)
   
   shared.current_dir = shared.NODIR
   shared.target_dir = shared.NODIR
@@ -27,34 +29,34 @@ def Start():
 
 
 def elevator_open_door():
-  if(shared.elev.elev_get_floor_sensor_signal() != -1):
+  if(driver.elev.elev_get_floor_sensor_signal() != -1):
     elevator_set_speed(0)
-    shared.elev.elev_set_door_open_lamp(1)
+    driver.elev.elev_set_door_open_lamp(1)
   time.sleep(1)
-  shared.elev.elev_set_door_open_lamp(0)
+  driver.elev.elev_set_door_open_lamp(0)
   
   
 def elevator_set_speed(speed):
 
   if (speed > 0):
     shared.current_dir = shared.UP
-    shared.elev.elev_set_speed(300)
+    driver.elev.elev_set_speed(300)
   
   elif (speed < 0):
     shared.current_dir = shared.DOWN
     print "jeg skal ned ikke i disko!"
-    shared.elev.elev_set_speed(-300)
+    driver.elev.elev_set_speed(-300)
   
   if (speed == 0):
     if (shared.current_dir == shared.UP):
-      shared.elev.elev_set_speed(-300)
+      driver.elev.elev_set_speed(-300)
       print "hei, jeg skal stoppe"
     
     elif (shared.current_dir == shared.DOWN):
-      shared.elev.elev_set_speed(300)
+      driver.elev.elev_set_speed(300)
    
     time.sleep(0.005)
-    shared.elev.elev_set_speed(0)
+    driver.elev.elev_set_speed(0)
     shared.current_dir = shared.NODIR
   return
   
@@ -87,7 +89,7 @@ def elevator_observer():
   # Hent bestillinger, oppdater lys osv
   while True:
     # Sjekk om en knapp er trykket inn,
-    if (shared.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
+    if (driver.elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
       return
     
     # Sjekk etasje sensor
@@ -151,7 +153,7 @@ def elevator_controller(floor, direction):
     return
     
   elif (target_floor == floor):
-    if (shared.elev.elev_get_floor_sensor_signal() == -1):
+    if (driver.elev.elev_get_floor_sensor_signal() == -1):
       elevator_set_speed(-300)
       shared.target_dir = shared.NODIR
     else:

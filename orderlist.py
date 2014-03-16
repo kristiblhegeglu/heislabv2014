@@ -1,4 +1,5 @@
 import shared
+import driver
 
 
 
@@ -11,6 +12,14 @@ class Order:
     self.completed = False
     # OSV
     
+  def ToString(self):
+    return "Order[floor:"+str(self.floor)+",direction="+str(self.direction)+"]"
+  
+  def ToJson(self):
+    order_dict = self.__dict__
+    order_dict["type"] = "order"
+    return json.dumps(order_dict)
+
 
 
 order_map = {}
@@ -65,15 +74,15 @@ def orderlist_completed():
     
 def orderlist_get_order():
   for i in range(shared.N_FLOORS):
-    if(shared.elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
+    if(driver.elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
       orderlist_add_order(i,shared.NODIR)
       
     if(i < shared.N_FLOORS-1):
-      if (shared.elev.elev_get_button_signal(shared.BUTTON_CALL_UP,i)):
+      if (driver.elev.elev_get_button_signal(shared.BUTTON_CALL_UP,i)):
         orderlist_add_order(i,shared.UP)
       
     if(i > 0):
-      if (shared.elev.elev_get_button_signal(shared.BUTTON_CALL_DOWN,i)):
+      if (driver.elev.elev_get_button_signal(shared.BUTTON_CALL_DOWN,i)):
         orderlist_add_order(i,shared.DOWN)
   return
     
@@ -101,6 +110,7 @@ def orderlist_check_finished(floor, direction):
     
   
 def orderlist_delete_order(floor, direction):
+  global order_map
   for key in order_map.keys():
     if (order_map[key].floor == floor) and (order_map[key].direction == direction):
       print "slettet ordre med floor:", order_map[key].floor, "and direction:", order_map[key].direction
@@ -109,7 +119,7 @@ def orderlist_delete_order(floor, direction):
   
   
 def orderlist_update_floor():  
-  floor = shared.elev.elev_get_floor_sensor_signal()
+  floor = driver.elev.elev_get_floor_sensor_signal()
   if (floor == -1):
     return
   else:
@@ -133,23 +143,23 @@ def GetNextOrderToHandle():
 def orderlist_set_lights():
   for i in range(shared.N_FLOORS):
     if (orderlist_check_floor_dir(i,shared.NODIR)):
-      shared.elev.elev_set_button_lamp(shared.BUTTON_COMMAND, i, 1)
+      driver.elev.elev_set_button_lamp(shared.BUTTON_COMMAND, i, 1)
     else:
-      shared.elev.elev_set_button_lamp(shared.BUTTON_COMMAND, i, 0)
+      driver.elev.elev_set_button_lamp(shared.BUTTON_COMMAND, i, 0)
   
   for i in range(shared.N_FLOORS-1):
     if (orderlist_check_floor_dir(i,shared.UP)):
-      shared.elev.elev_set_button_lamp(shared.BUTTON_CALL_UP, i, 1)
+      driver.elev.elev_set_button_lamp(shared.BUTTON_CALL_UP, i, 1)
     else:
-      shared.elev.elev_set_button_lamp(shared.BUTTON_CALL_UP, i, 0)
+      driver.elev.elev_set_button_lamp(shared.BUTTON_CALL_UP, i, 0)
   
   for i in range(1,shared.N_FLOORS):
     if (orderlist_check_floor_dir(i,shared.DOWN)):
-      shared.elev.elev_set_button_lamp(shared.BUTTON_CALL_DOWN, i, 1)
+      driver.elev.elev_set_button_lamp(shared.BUTTON_CALL_DOWN, i, 1)
     else:
-      shared.elev.elev_set_button_lamp(shared.BUTTON_CALL_DOWN, i, 0)
+      driver.elev.elev_set_button_lamp(shared.BUTTON_CALL_DOWN, i, 0)
   
-  shared.elev.elev_set_floor_indicator(shared.last_floor)
+  driver.elev.elev_set_floor_indicator(shared.last_floor)
   return
   
   
