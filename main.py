@@ -1,11 +1,13 @@
 import shared
 import elevator
 import orderlist
-import time
-import threading
 import driver
 import initialization
-import tull
+import network
+
+import time
+import threading
+
 
 
 def Io():
@@ -61,8 +63,8 @@ def main():
   Statemachine_thread.start()
   
   
-  tull.net_start()
-  #tull.network_sending()
+  network.net_start()
+  #network.network_sending()
 
   orderlist.orderlist_del_thread()
   

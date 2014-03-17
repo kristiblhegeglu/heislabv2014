@@ -77,8 +77,9 @@ def orderlist_completed():
     
     
 def orderlist_get_order():
+  global order_map
   for i in range(shared.N_FLOORS):
-    if(driver.elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
+    if (driver.elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
       orderlist_add_order(i,shared.NODIR)
       
     if(i < shared.N_FLOORS-1):
@@ -98,7 +99,7 @@ def orderlist_add_order(floor, direction):
   if (orderlist_check_floor_dir(floor, direction)):
     return
     
-  new_order = Order(shared.GetLocalElevatorId(), floor, direction, False,0)
+  new_order = Order(shared.GetLocalElevatorId(), floor, direction, False, 0)
   order_map[new_order.ID] = new_order
   print "New order with floor:",new_order.floor," and direction:",new_order.direction
   return
@@ -137,6 +138,7 @@ def orderlist_update_floor():
   #network.SendOrderMessage(o)
 
 def orderlist_merge_network(order):
+  global order_map
   if not (order.ID in order_map):
     order_map[order.ID] = order
     return

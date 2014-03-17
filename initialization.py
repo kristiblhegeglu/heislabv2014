@@ -1,11 +1,11 @@
 import elevator
 import orderlist
 import shared
-import tull
+import network
 
 def Initialization():
   elevator.Init()
   shared.Init()
-  tull.Init()
+  network.Init()
   
   return

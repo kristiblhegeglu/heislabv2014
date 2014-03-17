@@ -1,11 +1,20 @@
 import shared
 import orderlist
 import driver
+
 import time
 
-
+class Elevator:
+  def __init__(self, ip_address):
+    self.ip = ip_address
+    self.last_floor = -1  #changes later to last_floor
+    self.direction = -1
+    self.orders = []
+    self.last_ping = time.time()
 
 def Init():
+  global elevators 
+  elevators = {}
   if not(driver.elev.elev_init()):
     print "Failed to initialize"
     exit()
