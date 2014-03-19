@@ -66,7 +66,7 @@ def main():
   network.network_threads()
   #network.network_sending()
 
-  orderlist.orderlist_del_thread()
+  orderlist.orderlist_clean_thread()
   
   #Io()
   #Statemachine()
@@ -74,8 +74,8 @@ def main():
   while True:
     cmd = raw_input("Type a command")
     if cmd == "list_orders":
-      for key in orderlist.order_map:
-        print "Order:", orderlist.order_map[key].__dict__
+      for key in shared.order_map:
+        print "Order:", shared.order_map[key].__dict__
         
   return 
       

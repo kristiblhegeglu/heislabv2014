@@ -4,18 +4,13 @@ import driver
 
 import time
 
-class Elevator:
-  def __init__(self, ip_adress):
-    self.ip = ip_adress
-    self.last_floor = -1  #changes later to last_floor
-    self.direction = -1
-    self.orders = []
-    self.last_ping = time.time()
-    self.el_ID = shared.GetLocalElevatorID # MEST SANNSYLIG VELDIG FEIL!!!!!!!
-
+    
 def Init():
-  global elevators 
-  elevators = {}
+  shared.elevators 
+  global local_elevator
+  
+  local_elevator = shared.Elevator(shared.shared_local_ip(), shared.GetLocalElevatorId())
+  shared.elevators[shared.GetLocalElevatorId()] = local_elevator
   if not(driver.elev.elev_init()):
     print "Failed to initialize"
     exit()
@@ -87,17 +82,15 @@ def elevator_should_stop(floor,direction):
 
 
 def elevator_get_elevators():
-  global elevators
-  return elevators
+  shared.elevators
+  return shared.elevators
  
  
 def elevator_merge_network(elevator):
-  global elevators
-  if not (elevator.ip_adress in elevators):
-    elevators[elevator.ip_adress] = elevator
-    return
+  if not (elevator.ip_adress in shared.elevators):
+    shared.elevators[elevator.ip_adress] = elevator
+    return  
   
- 
  
 def elevator_observer():
   # Hent bestillinger, oppdater lys osv

@@ -2,6 +2,7 @@
 
 import orderlist
 import elevator
+import shared
 
 import random
 import os
@@ -14,8 +15,6 @@ import threading
 
 
 UDP_PORT = 31715
-
-our_ip = 0
 
     
 def Init():
@@ -39,8 +38,8 @@ def network_senddata(data):
   
 def send_orderlist(order_map):
   liste = []
-  for key in order_map:
-    liste.append(order_map[key].__dict__)
+  for key in shared.order_map:
+    liste.append(shared.order_map[key].__dict__)
   
   msg_dict = {"type":"orderlist","orders":liste}
   network_senddata(msg_dict)
@@ -50,13 +49,11 @@ def send_orderlist(order_map):
 
 #Function for receiving messages
 def network_receiver():
-  global our_ip
-  
   while True:
     msg, adress = network_socket.recvfrom(32000)    #receive messages, storing in msg and adress, max size 32000 bit
-    if adress[0] == our_ip:
+    if (adress[0] == shared.shared_local_ip()):
       continue
-    if len(msg) < 2:
+    if (len(msg) < 2):
       continue
     
     msg_dict = json.loads(msg)        #Converting from string to python object
@@ -66,45 +63,40 @@ def network_receiver():
       
     elif msg_dict["type"] == "orderlist":
       print "Test"
-      convert_to_ordinary_dict(msg_dict)
+      network_receive_orderdict(msg_dict)
       #print order_map
       
     elif msg_dict["type"] == "ping":
-      if not (adress[0] in elevator.elevators):
-        elevator.elevators[adress[0]] = elevator.Elevator(adress[0])
+      if not (adress[0] in shared.elevators):
+        shared.elevators[adress[0]] = shared.Elevator(adress[0])
         print "New elevator found, with ip: ", adress[0]
       #network_receive_elevator(msg_dict,adress)
       else:
-        elevator.elevators[adress[0]].last_ping = time.time()
+        shared.elevators[adress[0]].last_ping = time.time()
         
     else:
       print "Received data from", adress, "with payload:", msg_dict
 
+      
 def network_receiver_order(msg_dict):
   print "Received order with floor=",msg_dict["floor"],"and direction=",msg_dict["direction"]
-  order = orderlist.Order(msg_dict["creatorID"], msg_dict["floor"], msg_dict["direction"], msg_dict["completed"],msg_dict["time_completed"])
+  order = shared.Order(msg_dict["creatorID"], msg_dict["floor"], msg_dict["direction"], msg_dict["completed"], msg_dict["assigned"], msg_dict["assigned_to_id"], msg_dict["time_completed"])
   order.ID = msg_dict["ID"]
   orderlist.orderlist_get_order_map()[order.ID] = order
   
   print orderlist.orderlist_get_order_map()
   
-# Endre navn FYYY
-def convert_to_ordinary_dict(msg_dict):
+  
+
+def network_receive_orderdict(msg_dict):
   for order_dict in msg_dict["orders"]:
     #print order_dict
-    order = orderlist.Order(order_dict["creatorID"],order_dict["floor"], order_dict["direction"], order_dict["completed"],order_dict["time_completed"])
+    order = shared.Order(order_dict["creatorID"],order_dict["floor"], order_dict["direction"], order_dict["completed"], order_dict["assigned"], order_dict["assigned_to_id"], order_dict["time_completed"])
     order.ID = order_dict["ID"]
     orderlist.orderlist_merge_network(order)
     print "Test2"
     
 
-def network_local_ip():
-  global our_ip
-  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  s.connect(("gmail.com",80))
-  our_ip = s.getsockname()[0]
-  s.close()
-    
     
 def network_sending():
   while(True):
@@ -132,15 +124,15 @@ def network_send_ping(elevators):
 def network_connection_validator():
   while True:
     lost_ips = []
-    for ip in elevator.elevators:
-      elevator_state = elevator.elevators[ip]
+    for ip in shared.elevators:
+      elevator_state = shared.elevators[ip]
       if time.time() - elevator_state.last_ping > 2.0:
         print "Lost elevator with ip:", ip
         #TODO take over orders
         lost_ips.append(ip)
 
     for ip in lost_ips:
-      del elevator.elevators[ip]
+      del shared.elevators[ip]
       
   time.sleep(1.0)
 
@@ -151,7 +143,7 @@ def network_connection_validator():
 def network_threads():
   #global network_socket
   
-  network_local_ip()
+  shared.shared_local_ip()
   
  
   
