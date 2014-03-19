@@ -12,7 +12,7 @@ class Order:
     self.creatorID = creatorID
     self.floor = floor
     self.direction = direction
-    self.completed = False
+    self.completed = completed
     self.time_completed = time_completed
     # OSV
     
@@ -33,7 +33,7 @@ def Init():
   # Initialiser ordeliste
   return
 
-
+# Sjekker om det finnes en ordre i en etasje, som denne heisen skal utfoere
 def orderlist_check_floor(floor):
   global order_map
   
@@ -43,9 +43,12 @@ def orderlist_check_floor(floor):
     return False
   else:                                 # (orderlist_empty() == 0)
     for key in order_map:
-      if order_map[key].completed:
+      order = order_map[key]
+      if order.completed:
         continue
-      if order_map[key].floor == floor:
+      if order.direction == shared.NODIR and order.creatorID != shared.GetLocalElevatorId():
+        continue
+      if order.floor == floor:
         return True
     return False
 
@@ -54,9 +57,20 @@ def orderlist_check_floor_dir(floor,direction):
   if (floor < 0):
     return False
   for key in order_map:
-    if order_map[key].completed:
+    order = order_map[key]
+    if order.completed:
         continue
-    if (order_map[key].floor == floor) and (order_map[key].direction == direction):
+      
+    #if not order.assigned:
+    #  continue
+    
+    #if order.assigned_to_id != shared.GetLocalElevatorId():
+    #  continue
+    
+    if order.direction == shared.NODIR and order.creatorID != shared.GetLocalElevatorId():
+        continue
+    
+    if (order.floor == floor) and (order.direction == direction):
       return True 
   return False
 
@@ -74,7 +88,7 @@ def orderlist_completed():
     if (order.completed == True):
       return True
   return False
-    
+
     
 def orderlist_get_order():
   global order_map
@@ -115,14 +129,22 @@ def orderlist_check_finished(floor, direction):
       order.time_completed = time.time()
       
     
-  
+  # FYY
 def orderlist_delete_order():
   global order_map
   while True:
-    for key in order_map.keys():
-      if (order_map[key].completed) and (time.time() - order_map[key].time_completed > 14):
-        del order_map[key]
     time.sleep(10)
+    delete_list = []
+    for key in order_map.keys():
+      order = order_map[key]
+      if (order.completed) and ((time.time() - order.time_completed) > 10.0):
+        delete_list.append(key)
+        
+    
+    for key in delete_list:
+      del order_map[key]
+      print "sletter ordre: ", key
+    
       
   
   
@@ -140,12 +162,14 @@ def orderlist_update_floor():
 def orderlist_merge_network(order):
   global order_map
   if not (order.ID in order_map):
+    if order.completed:
+      return
     order_map[order.ID] = order
     return
   
   local_order = order_map[order.ID]
   if (order.completed):
-    local_order.completed 
+    local_order.completed = True
   
   return
 
@@ -173,6 +197,7 @@ def orderlist_set_lights():
   driver.elev.elev_set_floor_indicator(shared.last_floor)
   return
   
+  
 def orderlist_get_order_map():
   global order_map
   return order_map
@@ -185,7 +210,6 @@ def orderlist_get_order_map():
 
 def orderlist_del_thread():
   orderlist_thread = threading.Thread(target = orderlist_delete_order)
-  orderlist_thread.daemon = True
   orderlist_thread.start()
   
   return

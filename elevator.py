@@ -5,8 +5,8 @@ import driver
 import time
 
 class Elevator:
-  def __init__(self, ip_address):
-    self.ip = ip_address
+  def __init__(self, ip_adress):
+    self.ip = ip_adress
     self.last_floor = -1  #changes later to last_floor
     self.direction = -1
     self.orders = []
@@ -96,7 +96,20 @@ def elevator_check_dir(floor, direction):
         return True
   return False
   
+ 
+def elevator_get_elevators():
+  global elevators
+  return elevators
+ 
+ 
+def elevator_merge_network(elevator):
+  global elevators
+  if not (elevator.ip_adress in elevators):
+    elevators[elevator.ip_adress] = elevator
+    return
   
+ 
+ 
 def elevator_observer():
   # Hent bestillinger, oppdater lys osv
   while True:
@@ -138,14 +151,12 @@ def elevator_controller(floor, direction):
         target_floor = i
   
   if (direction == shared.NODIR) or (target_floor == -1):
-    min_distance = 999999
     for i in range(shared.N_FLOORS):
       if not (orderlist.orderlist_check_floor(i)):
         continue
-      distance = (floor-i)*(floor-1)
-      if (distance < min_distance):
-        target_floor = i
-        min_distance = distance
+      
+      target_floor = i
+
 
   if (target_floor == -1) and (orderlist.orderlist_completed()):
     #print "This should not happen!"

@@ -63,7 +63,7 @@ def main():
   Statemachine_thread.start()
   
   
-  network.net_start()
+  network.network_threads()
   #network.network_sending()
 
   orderlist.orderlist_del_thread()
