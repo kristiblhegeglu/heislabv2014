@@ -16,6 +16,8 @@ target_dir = NODIR
 
 last_floor = 0
 
+cost_infinity = 999999999
+
 class ElevatorState:
   def __init__(self):
     self.floor = 0

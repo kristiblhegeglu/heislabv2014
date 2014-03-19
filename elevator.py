@@ -11,6 +11,7 @@ class Elevator:
     self.direction = -1
     self.orders = []
     self.last_ping = time.time()
+    self.el_ID = shared.GetLocalElevatorID # MEST SANNSYLIG VELDIG FEIL!!!!!!!
 
 def Init():
   global elevators 
@@ -85,18 +86,6 @@ def elevator_should_stop(floor,direction):
   return False
 
 
-def elevator_check_dir(floor, direction):
-  if (direction == shared.UP):
-    for i in range(shared.N_FLOORS-1):
-      if (orderlist.orderlist_check_floor(i)):
-        return True
-  elif (direction == shared.DOWN):
-    for i in range(1, shared.N_FLOORS):
-      if (orderlist.orderlist_check_floor(i)):
-        return True
-  return False
-  
- 
 def elevator_get_elevators():
   global elevators
   return elevators

@@ -7,12 +7,14 @@ import threading
 
 
 class Order:
-  def __init__(self, creatorID, floor, direction, completed, time_completed):
+  def __init__(self, creatorID, floor, direction, completed,assigned, assigned_to_id, time_completed):
     self.ID = shared.CreateRandomID()
     self.creatorID = creatorID
     self.floor = floor
     self.direction = direction
     self.completed = completed
+    self.assigned = assigned
+    self.assigned_to_id = assigned_to_id
     self.time_completed = time_completed
     # OSV
     
@@ -52,6 +54,18 @@ def orderlist_check_floor(floor):
         return True
     return False
 
+
+def orderlist_check_direction(floor direction):
+  global order_map
+  for key in order_map:
+    order = order_map[key]
+    if (floor == order.floor) and (direction == shared.UP):
+      return True
+    elif (floor == order.floor) and (direction == shared.DOWN):
+      return True
+  return False
+    
+    
 def orderlist_check_floor_dir(floor,direction):
   global order_map
   if (floor < 0):
@@ -74,6 +88,63 @@ def orderlist_check_floor_dir(floor,direction):
       return True 
   return False
 
+  
+def orderlist_get_distance():
+  global order_map
+  for key in order_map:
+    for el in elevator.elevators:
+      order = order_map[key]
+      elevator_state = elevator.elevators[el]
+      distance = order.floor - elevator_state.last_floor
+      if (distance > 0):
+	if (shared.current_dir == shared.UP):
+	  distance -= 0.5
+	elif (shared.current_dir == shared.DOWN):
+	  distance += 0.5
+      if (distance < 0):
+	if (shared.current_dir == shared.UP):
+	  distance += 0.5
+	elif (shared.current_dir == shared.DOWN):
+	  distance -= 0.5
+  return distance
+      
+  
+def orderlist_cost_func():
+  global order_map
+  for key in order_map:
+    for el in elevator.elevators:
+      order = order_map[key]
+      elevator_state = elevator.elevators
+      
+      if (order.direction == shared.NODIR):
+	if (order.creatorID == elevator_state):
+	  return False
+	else:
+	  return shared.cost_infinity
+      
+      #Hvis heisen er stoppet, sett til infinity!!!
+      
+      
+      if (shared.current_dir == shared.NODIR) and (elevator_state.last_floor == order.floor):
+	return False
+      
+      direction = orderlist_check_direction(floor,direction)
+      distance = orderlist_get_distance()
+      
+      if (direction == shared.NODIR): #Hva skal vi bruke i stedetfor lastdir??
+	cost += distance*10.0
+      elif (shared.current_dir == shared.NODIR) and (shared.target_floor == shared.last_floor):  #and idle???
+	cost += distance*10.0
+      else:					#Moving in wrong direction
+	cost += distance*30.0
+      
+      #cost += order.count_assigned_orders()*15
+      
+      if (order.assigned) and (order.assigned_to_id != elevator_state.el_ID):
+	cost += 1
+
+  return cost
+  
 def orderlist_empty():
   global order_map
   if len(order_map) == 0:
@@ -113,7 +184,7 @@ def orderlist_add_order(floor, direction):
   if (orderlist_check_floor_dir(floor, direction)):
     return
     
-  new_order = Order(shared.GetLocalElevatorId(), floor, direction, False, 0)
+  new_order = Order(shared.GetLocalElevatorId(), floor, direction, assigned, assigned_to_id, False, 0)
   order_map[new_order.ID] = new_order
   print "New order with floor:",new_order.floor," and direction:",new_order.direction
   return
