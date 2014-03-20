@@ -6,7 +6,7 @@ import time
 
 class Order:
   def __init__(self, creatorID, floor, direction, completed,assigned, assigned_to_id, time_completed):
-    self.ID = CreateRandomID()
+    self.ID = create_random_ID()
     self.creatorID = creatorID
     self.floor = floor
     self.direction = direction
@@ -28,17 +28,18 @@ class Order:
 class Elevator:
   def __init__(self, ip_adress, last_floor, direction, last_ping, elevator_id):
     self.ip = ip_adress
-    self.last_floor = last_floor  #changes later to last_floor
+    self.last_floor = last_floor #changes later to last_floor
     self.direction = direction
     self.last_ping = last_ping
-    self.el_ID = elevator_id 
+    self.el_ID = elevator_id
 
     
 order_map = {}
 
 
 elevators = {}
-#local_elevator = Elevator()
+local_elevator = Elevator(shared_local_ip(), 0, NODIR, 0, get_local_elevator_ID())
+elevators[get_local_elevator_ID()] = local_elevator
 
 
 N_FLOORS = 4
@@ -68,21 +69,21 @@ class ElevatorState:
     self.floor = 0
     self.direction = BUTTON_COMMAND
 
-LocalElevatorID = 0
+local_elevator_ID = 0
 LocalElevatorState = ElevatorState()
 
 def Init():
-  global LocalElevatorID
+  global local_elevator_ID
   random.seed()
-  LocalElevatorID = random.randint(0, 1000000000)
+  local_elevator_ID = random.randint(0, 1000000000)
   
   
 
-def GetLocalElevatorId():
-  return LocalElevatorID
+def get_local_elevator_ID():
+  return local_elevator_ID
   
 
-def CreateRandomID():
+def create_random_ID():
   return random.randint(0, 1000000000)
 
   
