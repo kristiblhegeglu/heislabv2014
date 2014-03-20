@@ -22,7 +22,7 @@ def Init():
   global network_socket
   network_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
   network_socket.bind(('0.0.0.0', UDP_PORT))
-  network_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)   
+  network_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
   
   return
 
@@ -58,7 +58,7 @@ def network_send_elevator_state(elevators):
   
 def network_send_ping(elevators):
   liste = []
-  msg_dict = {"type":"ping", "state":shared.elevators[shared.GetLocalElevatorId()].__dict__}
+  msg_dict = {"type":"ping", "state":shared.elevators[shared.get_local_elevator_ID()].__dict__}
   network_senddata(msg_dict)
   #print "sender ping", msg_dict
   
@@ -67,14 +67,14 @@ def network_send_ping(elevators):
 #Function for receiving messages
 def network_receiver():
   while True:
-    msg, adress = network_socket.recvfrom(32000)    #receive messages, storing in msg and adress, max size 32000 bit
+    msg, adress = network_socket.recvfrom(32000) #receive messages, storing in msg and adress, max size 32000 bit
     if (adress[0] == shared.shared_local_ip()):
       continue
     if (len(msg) < 2):
       continue
     
-    msg_dict = json.loads(msg)        #Converting from string to python object
-    if msg_dict["type"] == "order":   #Checks for different types, order, elevator, lights, ping
+    msg_dict = json.loads(msg) #Converting from string to python object
+    if msg_dict["type"] == "order": #Checks for different types, order, elevator, lights, ping
       print "Dette skal ikke komme..."
       network_receiver_order(msg_dict)
       
@@ -84,8 +84,8 @@ def network_receiver():
       #print order_map
     
     #elif msg_dict["type"] == "elevator_state":
-    #  print "Test"
-    #  network_receive_elevator_state(msg_dict)
+    # print "Test"
+    # network_receive_elevator_state(msg_dict)
       
     elif msg_dict["type"] == "ping":
       #print "har type ping"
@@ -162,7 +162,7 @@ def network_connection_validator():
   #print "Sjekker connections"
   lost_ids = []
   for ID in shared.elevators:
-    if ID == shared.GetLocalElevatorId():
+    if ID == shared.get_local_elevator_ID():
       continue # can't loose the local elevator
     elevator_state = shared.elevators[ID]
     
@@ -202,13 +202,6 @@ def network_threads():
 
 if __name__ == "__main__":
   network_threads()
-
-  
-  
-  
-  
-  
-  
   
   
 
