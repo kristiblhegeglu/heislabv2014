@@ -18,7 +18,7 @@ def Io():
     
     time.sleep(0.01)
     
-  return 
+  return
   
   
 def Statemachine():
@@ -27,7 +27,7 @@ def Statemachine():
     while (orderlist.orderlist_empty()):
       time.sleep(0.001)
     
-    if not elevator.elevator_controller(shared.last_floor, shared.target_dir):
+    if not elevator.elevator_controller(shared.local_elevator.last_floor, shared.target_dir):
       # We din't have anything to do, so lets wait a bit
       time.sleep(0.1)
       continue
@@ -43,14 +43,14 @@ def Statemachine():
     if(elevator.elevator_should_stop(floor_reached)):
       elevator.elevator_set_speed(0)
       
-      orderlist.orderlist_check_finished(floor_reached, shared.current_dir)
+      orderlist.orderlist_check_finished(floor_reached, shared.local_elevator.direction)
       elevator.elevator_open_door()
     elif (floor_reached == 0) or (floor_reached == shared.N_FLOORS-1):
       elevator.elevator_set_speed(0)
       
     time.sleep(0.001)
     #print "floor reached: ",floor_reached
-  return 
+  return
   
   
 
@@ -89,7 +89,7 @@ def main():
       for key in shared.elevators:
         print "Elevator:", shared.elevators[key].__dict__
         
-  return 
+  return
       
 
 
