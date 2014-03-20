@@ -25,8 +25,17 @@ def orderlist_check_floor(floor):
       order = shared.order_map[key]
       if order.completed:
         continue
+      
+      if not order.assigned:
+        continue
+      
+      if order.assigned_to_id != shared.GetLocalElevatorId():
+        continue
+      
       if order.direction == shared.NODIR and order.creatorID != shared.GetLocalElevatorId():
         continue
+     
+      
       if order.floor == floor:
         return True
     return False
@@ -190,9 +199,11 @@ def orderlist_empty():
 
 def orderlist_completed():
   for key,order in shared.order_map.iteritems():
-    if (order.completed == True):
-      return True
-  return False
+    if (order.completed):
+      continue
+    if order.assigned and order.assigned_to_id == shared.GetLocalElevatorId():
+      return False
+  return True
 
     
 def orderlist_get_order():
@@ -212,9 +223,12 @@ def orderlist_get_order():
     
 # Create an order from the local elevator
 def orderlist_add_order(floor, direction):
-  
-  if (orderlist_check_floor_dir(floor, direction)):
-    return
+  for key in shared.order_map:
+    order = shared.order_map[key]
+    if order.completed:
+      continue
+    if order.floor == floor and order.direction == direction:
+      return
     
   new_order = shared.Order(shared.GetLocalElevatorId(), floor, direction, False, -1, False, 0)
   orderlist_assign_order(new_order)

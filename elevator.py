@@ -138,13 +138,10 @@ def elevator_controller(floor, direction):
   
   if (direction == shared.NODIR) or (shared.target_floor == -1):
     for i in range(shared.N_FLOORS):
-      if not (orderlist.orderlist_check_floor(i)):
-        continue
-      
-      shared.target_floor = i
+      if orderlist.orderlist_check_floor(i):
+        shared.target_floor = i
 
-
-  if (shared.target_floor == -1) and (orderlist.orderlist_completed()):
+  if (shared.target_floor == -1):
     elevator_set_speed(0)
     shared.target_dir = shared.NODIR
     return False

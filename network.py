@@ -58,9 +58,7 @@ def network_send_elevator_state(elevators):
   
 def network_send_ping(elevators):
   liste = []
-  for key in shared.elevators:
-    liste.append(shared.elevators[key].__dict__)
-  msg_dict = {"type":"ping", "pinger":liste}
+  msg_dict = {"type":"ping", "state":shared.elevators[shared.GetLocalElevatorId()].__dict__}
   network_senddata(msg_dict)
   #print "sender ping", msg_dict
   
@@ -124,20 +122,20 @@ def network_receive_elevator_state(msg_dict):
    
 def network_receive_pinger(msg_dict, adress):
   #print "MSG_DICT", msg_dict
-  for el in msg_dict["pinger"]:
-    #print "mottar type ping"
-    ID = el["el_ID"]
-    if not (ID in shared.elevators):
-      new_el = shared.Elevator(adress[0], time.time(), ID)
-      shared.elevators[ID] = new_el
-      print "New elevator found, with ip: ", adress[0]
-      
-    else:
-      #Change name later!!
-      elevator_state = shared.elevators[ID]
-      elevator_state.last_ping = time.time()
-      elevator_state.last_floor = orderlist.orderlist_update_floor()
-      elevator_state.direction = el["direction"]
+  el = msg_dict["state"]
+  #print "mottar type ping"
+  ID = el["el_ID"]
+  if not (ID in shared.elevators):
+    new_el = shared.Elevator(adress[0],el["last_floor"], el["direction"], time.time(), ID)
+    shared.elevators[ID] = new_el
+    print "New elevator found, with ip: ", adress[0]
+  
+  else:
+    #Change name later!!
+    elevator_state = shared.elevators[ID]
+    elevator_state.last_ping = time.time()
+    elevator_state.last_floor = el["last_floor"]
+    elevator_state.direction = el["direction"]
     
    
     

@@ -38,6 +38,7 @@ order_map = {}
 
 
 elevators = {}
+#local_elevator = Elevator()
 
 
 N_FLOORS = 4
@@ -50,11 +51,13 @@ UP = 0
 DOWN = 1
 NODIR = 2
 
-current_dir = NODIR
+# SLETT bruk local_elevator.current_dir i stedet
+#current_dir = NODIR
 target_dir = NODIR
 last_dir = DOWN
 
-last_floor = 0
+#SLETT bruk local_elevator.last_floor i stedet
+#last_floor = 0
 
 target_floor = -1
 
