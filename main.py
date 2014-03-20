@@ -26,18 +26,27 @@ def Statemachine():
     
     while (orderlist.orderlist_empty()):
       time.sleep(0.001)
-    elevator.elevator_controller(shared.last_floor, shared.target_dir)
+    
+    if not elevator.elevator_controller(shared.last_floor, shared.target_dir):
+      # We din't have anything to do, so lets wait a bit
+      time.sleep(0.1)
+      continue
     #print driver.elev.elev_get_floor_sensor_signal()
     
-    while(driver.elev.elev_get_floor_sensor_signal == -1):
+    while(driver.elev.elev_get_floor_sensor_signal() != -1):
+      time.sleep(0.001)
+     
+    while(driver.elev.elev_get_floor_sensor_signal() == -1):
       time.sleep(0.001)
       
     floor_reached = driver.elev.elev_get_floor_sensor_signal()
-    if(elevator.elevator_should_stop(floor_reached, shared.current_dir)):
+    if(elevator.elevator_should_stop(floor_reached)):
       elevator.elevator_set_speed(0)
       
       orderlist.orderlist_check_finished(floor_reached, shared.current_dir)
       elevator.elevator_open_door()
+    elif (floor_reached == 0) or (floor_reached == shared.N_FLOORS-1):
+      elevator.elevator_set_speed(0)
       
     time.sleep(0.001)
     #print "floor reached: ",floor_reached
@@ -76,6 +85,9 @@ def main():
     if cmd == "list_orders":
       for key in shared.order_map:
         print "Order:", shared.order_map[key].__dict__
+    elif cmd == "list_elevators":
+      for key in shared.elevators:
+        print "Elevator:", shared.elevators[key].__dict__
         
   return 
       

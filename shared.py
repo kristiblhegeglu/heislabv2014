@@ -26,12 +26,11 @@ class Order:
 
 
 class Elevator:
-  def __init__(self, ip_adress, elevator_id):
+  def __init__(self, ip_adress, last_floor, direction, last_ping, elevator_id):
     self.ip = ip_adress
-    self.last_floor = -1  #changes later to last_floor
-    self.direction = -1
-    self.orders = []
-    self.last_ping = time.time()
+    self.last_floor = last_floor  #changes later to last_floor
+    self.direction = direction
+    self.last_ping = last_ping
     self.el_ID = elevator_id 
 
     
@@ -53,8 +52,11 @@ NODIR = 2
 
 current_dir = NODIR
 target_dir = NODIR
+last_dir = DOWN
 
 last_floor = 0
+
+target_floor = -1
 
 cost_infinity = 999999999
 

@@ -4,8 +4,8 @@ import shared
 import network
 
 def Initialization():
-  elevator.Init()
   shared.Init()
+  elevator.Init()
   network.Init()
   
   return

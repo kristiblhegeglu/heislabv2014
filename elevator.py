@@ -6,11 +6,12 @@ import time
 
     
 def Init():
-  shared.elevators 
+  #shared.elevators 
   global local_elevator
   
-  local_elevator = shared.Elevator(shared.shared_local_ip(), shared.GetLocalElevatorId())
+  local_elevator = shared.Elevator(shared.shared_local_ip(), 0, 0, shared.NODIR, shared.GetLocalElevatorId())
   shared.elevators[shared.GetLocalElevatorId()] = local_elevator
+  
   if not(driver.elev.elev_init()):
     print "Failed to initialize"
     exit()
@@ -48,11 +49,15 @@ def elevator_open_door():
 def elevator_set_speed(speed):
 
   if (speed > 0):
+    print "UP"
     shared.current_dir = shared.UP
+    shared.last_dir = shared.UP
     driver.elev.elev_set_speed(300)
   
   elif (speed < 0):
+    print "DOWN"
     shared.current_dir = shared.DOWN
+    shared.last_dir = shared.DOWN
     driver.elev.elev_set_speed(-300)
   
   if (speed == 0):
@@ -69,26 +74,25 @@ def elevator_set_speed(speed):
   return
   
   
-def elevator_should_stop(floor,direction):
-  if (orderlist.orderlist_check_floor_dir(floor,shared.NODIR)):
-    return True
-  if (orderlist.orderlist_check_floor_dir(floor,direction)):
-    print "Stop"
-    return True
-  if (orderlist.orderlist_check_floor(floor)):
-    return True
-
+def elevator_should_stop(floor):  
+  for key in shared.order_map:
+    order = shared.order_map[key]
+    if (order.completed):
+      continue
+    if (orderlist.should_complete(order,floor)):
+      return True
+  
   return False
+    
 
 
 def elevator_get_elevators():
-  shared.elevators
   return shared.elevators
  
  
 def elevator_merge_network(elevator):
-  if not (elevator.ip_adress in shared.elevators):
-    shared.elevators[elevator.ip_adress] = elevator
+  if not (elevator.el_ID in shared.elevators):
+    shared.elevators[elevator.el_ID] = elevator
     return  
   
  
@@ -118,53 +122,54 @@ def elevator_controller(floor, direction):
   if (orderlist.orderlist_empty()):				#If orderlist is empty, set direction to NODIR and speed to 0
     elevator_set_speed(0)
     shared.target_dir = shared.NODIR
-    return
+    return False
     
-  target_floor = -1
+  shared.target_floor = -1
   
   if(direction == shared.UP):
     for i in range(shared.N_FLOORS):
       if (orderlist.orderlist_check_floor(i)):
-        target_floor = i
+        shared.target_floor = i
   
   elif (direction == shared.DOWN):
     for i in range(shared.N_FLOORS):
       if (orderlist.orderlist_check_floor(i)):
-        target_floor = i
+        shared.target_floor = i
   
-  if (direction == shared.NODIR) or (target_floor == -1):
+  if (direction == shared.NODIR) or (shared.target_floor == -1):
     for i in range(shared.N_FLOORS):
       if not (orderlist.orderlist_check_floor(i)):
         continue
       
-      target_floor = i
+      shared.target_floor = i
 
 
-  if (target_floor == -1) and (orderlist.orderlist_completed()):
-    #print "This should not happen!"
+  if (shared.target_floor == -1) and (orderlist.orderlist_completed()):
     elevator_set_speed(0)
     shared.target_dir = shared.NODIR
-    return
+    return False
   
-  if (target_floor > floor):
+  if (shared.target_floor > floor):
     elevator_set_speed(300)
     shared.target_dir = shared.UP
-    return
+    return True
     
   
-  elif (target_floor < floor):
+  elif (shared.target_floor < floor):
     elevator_set_speed(-300)
     shared.target_dir = shared.DOWN
-    return
+    return True
     
-  elif (target_floor == floor):
+  elif (shared.target_floor == floor):
     if (driver.elev.elev_get_floor_sensor_signal() == -1):
       elevator_set_speed(-300)
       shared.target_dir = shared.NODIR
+      return True
     else:
       elevator_set_speed(0)
       shared.target_dir = shared.NODIR
-    return
+      return False
+    return False
 	
 
 

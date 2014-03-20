@@ -31,16 +31,6 @@ def orderlist_check_floor(floor):
         return True
     return False
 
-
-def orderlist_check_direction(floor, direction):
-  for key in shared.order_map:
-    order = shared.order_map[key]
-    if (floor == order.floor) and (direction == shared.UP):
-      return True
-    elif (floor == order.floor) and (direction == shared.DOWN):
-      return True
-  return False
-    
     
 def orderlist_check_floor_dir(floor,direction):
   if (floor < 0):
@@ -63,7 +53,48 @@ def orderlist_check_floor_dir(floor,direction):
       return True 
   return False
   
+  
+def orderlist_check_direction(floor, direction):
+  for key in shared.order_map:
+    order = shared.order_map[key]
+    if (floor == order.floor) and (direction == shared.UP):
+      return True
+    elif (floor == order.floor) and (direction == shared.DOWN):
+      return True
+  return False
     
+  
+def should_complete(order, floor):
+  if (order.floor != floor):
+    return False
+  
+  if order.completed:
+    print "[WARNING] should_complete was called with an already completed order"
+    return False
+  
+  if (order.direction == shared.NODIR):
+    return True
+  elif (order.direction == shared.last_dir):
+    return True
+    
+  if (shared.last_dir == shared.UP):
+    for key in shared.order_map:
+      o2 = shared.order_map[key]
+      if (o2.completed):
+        continue
+      if (o2.floor > floor):
+        return False
+  
+  if (shared.last_dir == shared.DOWN):
+    for key in shared.order_map:
+      o2 = shared.order_map[key]
+      if (o2.completed):
+        continue
+      if (o2.floor < floor):
+        return False
+  
+  return True
+  
   
 def orderlist_get_distance(order, elevator_state):
   distance = order.floor - elevator_state.last_floor
@@ -74,9 +105,9 @@ def orderlist_get_distance(order, elevator_state):
       distance += 0.5
     if (distance < 0):
       if (shared.current_dir == shared.UP):
-	distance += 0.5
+        distance += 0.5
       elif (shared.current_dir == shared.DOWN):
-	distance -= 0.5
+        distance -= 0.5
   return distance
       
  
@@ -91,29 +122,30 @@ def orderlist_count_assigned_orders(elevator_state):
   return count
     
   
-def ordelist_cost_func(order, elevator_state):
+def orderlist_cost_func(order, elevator_state):
+  cost = 0
+  
   if (order.direction == shared.NODIR):
-    if (order.creatorID == elevator_state):
-      return False
+    if (order.creatorID == elevator_state.el_ID):
+      print "elevator ID er lik creatorID"
+      return 0
     else:
       return shared.cost_infinity
       
       #Hvis heisen er stoppet, sett til infinity!!!
       
   if (shared.current_dir == shared.NODIR) and (elevator_state.last_floor == order.floor):
-    return False
+    return 0
       
-  direction = orderlist_check_direction(floor,direction)
-  distance = orderlist_get_distance()
+  direction = orderlist_check_direction(order.floor,order.direction)
+  distance = orderlist_get_distance(order, elevator_state)
       
-  if (direction == shared.NODIR): #Hva skal vi bruke i stedetfor lastdir??
-    cost += distance*10.0
-  elif (shared.current_dir == shared.NODIR) and (shared.target_floor == shared.last_floor):  #and idle???
+  if (direction == shared.last_dir): #Hva skal vi bruke i stedetfor lastdir??
     cost += distance*10.0
   else:					#Moving in wrong direction
     cost += distance*30.0
       
-  cost += orderlist_count_assigned_orders()*15
+  cost += orderlist_count_assigned_orders(elevator_state)*15
       
   if (order.assigned) and (order.assigned_to_id != elevator_state.el_ID):
     cost += 1
@@ -124,8 +156,9 @@ def ordelist_cost_func(order, elevator_state):
 def orderlist_assign_order(order):
   lowest_cost = 0
   best_elevator_id = order.creatorID
-  for elevator_state in shared.elevators:
-    cost = order.elevator_cost_func(order, elevator_state)
+  for key in shared.elevators:
+    elevator_state = shared.elevators[key]
+    cost = orderlist_cost_func(order, elevator_state)
     if (cost < lowest_cost):
       lowest_cost = cost
       best_elevator_id = elevator_state.el_ID
@@ -190,12 +223,13 @@ def orderlist_add_order(floor, direction):
   print "New order with floor:",new_order.floor," and direction:",new_order.direction
   return
 
-
+# FYY kall den mark completed
 def orderlist_check_finished(floor, direction):
-  print "Should complete on floor", floor, "and dir", direction
   for key,order in shared.order_map.iteritems():
-    if order.floor == floor: # and order.direction == direction:
-      print "Order completed"
+    if order.completed:
+      continue
+    if (order.floor == floor) and should_complete(order, floor):
+      print "Order:", order.ID,"completed"
       order.completed = True
       order.time_completed = time.time()
       
@@ -265,7 +299,6 @@ def orderlist_set_lights():
   
   
 def orderlist_get_order_map():
-  shared.order_map
   return shared.order_map
   
 #orderlist_add_order(3,shared.UP)
