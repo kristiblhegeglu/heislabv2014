@@ -6,11 +6,7 @@ import time
 
     
 def Init():
-  #shared.elevators 
-  global local_elevator
-  
-  local_elevator = shared.Elevator(shared.shared_local_ip(), 0, 0, shared.NODIR, shared.GetLocalElevatorId())
-  shared.elevators[shared.GetLocalElevatorId()] = local_elevator
+  #shared.elevators
   
   if not(driver.elev.elev_init()):
     print "Failed to initialize"
@@ -23,9 +19,9 @@ def Init():
   time.sleep(0.005)
   driver.elev.elev_set_speed(0)
   
-  shared.current_dir = shared.NODIR
+  shared.local_elevator.direction = shared.NODIR
   shared.target_dir = shared.NODIR
-  shared.last_floor = 0
+  shared.local_elevator.last_floor = 0
   
   time.sleep(1)
   
@@ -50,31 +46,31 @@ def elevator_set_speed(speed):
 
   if (speed > 0):
     print "UP"
-    shared.current_dir = shared.UP
+    shared.local_elevator.direction = shared.UP
     shared.last_dir = shared.UP
     driver.elev.elev_set_speed(300)
   
   elif (speed < 0):
     print "DOWN"
-    shared.current_dir = shared.DOWN
+    shared.local_elevator.direction = shared.DOWN
     shared.last_dir = shared.DOWN
     driver.elev.elev_set_speed(-300)
   
   if (speed == 0):
-    if (shared.current_dir == shared.UP):
+    if (shared.local_elevator.direction == shared.UP):
       driver.elev.elev_set_speed(-300)
       print "hei, jeg skal stoppe"
     
-    elif (shared.current_dir == shared.DOWN):
+    elif (shared.local_elevator.direction == shared.DOWN):
       driver.elev.elev_set_speed(300)
    
     time.sleep(0.005)
     driver.elev.elev_set_speed(0)
-    shared.current_dir = shared.NODIR
+    shared.local_elevator.direction = shared.NODIR
   return
   
   
-def elevator_should_stop(floor):  
+def elevator_should_stop(floor):
   for key in shared.order_map:
     order = shared.order_map[key]
     if (order.completed):
@@ -93,7 +89,7 @@ def elevator_get_elevators():
 def elevator_merge_network(elevator):
   if not (elevator.el_ID in shared.elevators):
     shared.elevators[elevator.el_ID] = elevator
-    return  
+    return
   
  
 def elevator_observer():
@@ -119,7 +115,7 @@ def elevator_observer():
 
 def elevator_controller(floor, direction):
   # Drive elevator to order from orderlist
-  if (orderlist.orderlist_empty()):				#If orderlist is empty, set direction to NODIR and speed to 0
+  if (orderlist.orderlist_empty()):	#If orderlist is empty, set direction to NODIR and speed to 0
     elevator_set_speed(0)
     shared.target_dir = shared.NODIR
     return False
@@ -167,12 +163,4 @@ def elevator_controller(floor, direction):
       shared.target_dir = shared.NODIR
       return False
     return False
-	
-
-
-
-#def test():
-  
- # Init()
-  #return False
 
