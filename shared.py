@@ -13,24 +13,17 @@ UP = 0
 DOWN = 1
 NODIR = 2
 
-# SLETT bruk local_elevator.current_dir i stedet
-#current_dir = NODIR
 target_dir = NODIR
 last_dir = DOWN
 
-#SLETT bruk local_elevator.last_floor i stedet
-#last_floor = 0
-
 target_floor = -1
-
 
 cost_infinity = 999999999
 
-
 order_map = {}
 
-
 elevators = {}
+
 
 class Order:
   def __init__(self, creatorID, floor, direction, completed,assigned, assigned_to_id, time_completed):
@@ -42,7 +35,7 @@ class Order:
     self.assigned = assigned
     self.assigned_to_id = assigned_to_id
     self.time_completed = time_completed
-    # OSV
+
     
   def ToString(self):
     out = "Order[floor:"+str(self.floor)+",direction="+str(self.direction)
@@ -68,8 +61,8 @@ class Elevator:
     self.el_ID = elevator_id
 
 
-
 local_elevator_ID = 0
+
 
 def Init():
   global local_elevator_ID
@@ -81,8 +74,7 @@ def Init():
   print "My id", local_elevator_ID
   local_elevator = Elevator(shared_local_ip(), 0, NODIR, 0, get_local_elevator_ID())
   elevators[get_local_elevator_ID()] = local_elevator
-
-  
+ 
   
 def get_local_elevator_ID():
   return local_elevator_ID

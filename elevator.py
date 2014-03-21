@@ -9,12 +9,12 @@ import time
 def Init():
   #shared.elevators
   
-  if not(driver.elev.elev_init()):
+  if not (driver.elev.elev_init()):
     print "Failed to initialize"
     exit()
   
   driver.elev.elev_init()
-  while(driver.elev.elev_get_floor_sensor_signal() != 0):
+  while (driver.elev.elev_get_floor_sensor_signal() != 0):
     driver.elev.elev_set_speed(-300)
   driver.elev.elev_set_speed(300)
   time.sleep(0.005)
@@ -37,16 +37,16 @@ def Start():
 
   
 #Open door function
-def elevator_open_door():
-  if(driver.elev.elev_get_floor_sensor_signal() != -1):
-    elevator_set_speed(0)
+def open_door():
+  if (driver.elev.elev_get_floor_sensor_signal() != -1):
+    set_speed(0)
     driver.elev.elev_set_door_open_lamp(1)
   time.sleep(1)
   driver.elev.elev_set_door_open_lamp(0)
   
   
 #Sets the speed of the elevator, along with changing direction for local elevator  
-def elevator_set_speed(speed):
+def set_speed(speed):
   if (speed > 0):
     print "UP"
     shared.local_elevator.direction = shared.UP
@@ -74,7 +74,7 @@ def elevator_set_speed(speed):
   
   
 #Checks if the elevator should stop in this floor accordingly to orders  
-def elevator_should_stop(floor):
+def should_stop(floor):
   for key in shared.order_map:
     order = shared.order_map[key]
     if (order.completed):
@@ -86,40 +86,19 @@ def elevator_should_stop(floor):
     
 
 #Returns the dictionary with all elevators    
-def elevator_get_elevators():
+def get_elevators():
   return shared.elevators
  
 
 #If the elevator we found is not in the dictionary already, put in in with its own ID 
-def elevator_merge_network(elevator):
+def merge_network(elevator):
   if not (elevator.el_ID in shared.elevators):
     shared.elevators[elevator.el_ID] = elevator
     return
   
- 
-def elevator_observer():
-  # Hent bestillinger, oppdater lys osv
-  while True:
-    # Sjekk om en knapp er trykket inn,
-    if (driver.elev.elev_get_button_signal(shared.BUTTON_COMMAND,i)):
-      return
-    
-    # Sjekk etasje sensor
-    if True: # Reached new floor
-      shared.LocalElevatorState.floor = floor
-      #network.SendElevatorState(shared.LocalElevatorState)
-      continue
-    # Oppdater lys hvis man er i en etasje
-    
-    # Oppdater ordre lys
-    orderlist.GetAllOrders()
-    
-    time.sleep(0.001)
-  return
-  
 
 #Controls the elevator in the right direction, accordingly to the order its supposed to take next
-def elevator_controller(floor, direction):
+def controller(floor, direction):
   shared.target_floor = -1
   
   best_cost = 999999999
@@ -134,7 +113,7 @@ def elevator_controller(floor, direction):
     if (order.floor == floor) and not (orderlist.should_complete(order, floor)):
       continue
       
-    cost = orderlist.orderlist_cost_func(order, shared.local_elevator)
+    cost = orderlist.cost_func(order, shared.local_elevator)
     
     if (cost < best_cost):
       best_cost = cost
@@ -149,28 +128,28 @@ def elevator_controller(floor, direction):
 
   if (shared.target_floor < 0) or (shared.target_floor >= shared.N_FLOORS):
     print "Should not be reached"
-    elevator_set_speed(0)
+    set_speed(0)
     shared.target_dir = shared.NODIR
     return False
   
   if (shared.target_floor > floor):
-    elevator_set_speed(300)
+    set_speed(300)
     shared.target_dir = shared.UP
     return True
     
   
   elif (shared.target_floor < floor):
-    elevator_set_speed(-300)
+    set_speed(-300)
     shared.target_dir = shared.DOWN
     return True
     
   elif (shared.target_floor == floor):
     if (driver.elev.elev_get_floor_sensor_signal() == -1):
-      elevator_set_speed(-300)
+      set_speed(-300)
       shared.target_dir = shared.NODIR
       return True
     else:
-      elevator_set_speed(0)
+      set_speed(0)
       shared.target_dir = shared.NODIR
       return True
   

@@ -11,10 +11,10 @@ import threading
 
 
 def Io():
-  while(True):
-    orderlist.orderlist_get_order()
-    orderlist.orderlist_update_floor()
-    orderlist.orderlist_set_lights()
+  while True:
+    orderlist.get_order()
+    orderlist.update_floor()
+    orderlist.set_lights()
     
     time.sleep(0.01)
     
@@ -22,12 +22,12 @@ def Io():
   
   
 def Statemachine():
-  while (True):
+  while True:
     
     while (orderlist.orderlist_empty()):
       time.sleep(0.01)
     
-    if not (elevator.elevator_controller(shared.local_elevator.last_floor, shared.target_dir)):
+    if not (elevator.controller(shared.local_elevator.last_floor, shared.target_dir)):
       # We din't have anything to do, so lets wait a bit
       time.sleep(0.1)
       #print "#1"
@@ -45,15 +45,15 @@ def Statemachine():
         time.sleep(0.01)
       
     floor_reached = driver.elev.elev_get_floor_sensor_signal()
-    if (elevator.elevator_should_stop(floor_reached)):
+    if (elevator.should_stop(floor_reached)):
       #print "#4"
-      elevator.elevator_set_speed(0)
+      elevator.set_speed(0)
       
-      orderlist.orderlist_check_finished(floor_reached, shared.local_elevator.direction)
-      elevator.elevator_open_door()
+      orderlist.check_finished(floor_reached, shared.local_elevator.direction)
+      elevator.open_door()
       #print "#6"
     elif (floor_reached == 0) or (floor_reached == shared.N_FLOORS-1):
-      elevator.elevator_set_speed(0)
+      elevator.set_speed(0)
       #print "#7"
       
     time.sleep(0.01)
@@ -83,7 +83,7 @@ def main():
   network.network_threads()
   #network.network_sending()
 
-  orderlist.orderlist_clean_thread()
+  orderlist.clean_thread()
   
   #Io()
   #Statemachine()
