@@ -4,7 +4,8 @@ import driver
 
 import time
 
-    
+
+#Initializes the elevator, drives down to ground floor before taking any orders
 def Init():
   #shared.elevators
   
@@ -27,13 +28,15 @@ def Init():
   
   return
   
+  
 def Start():
   # Listen from driver
   # Thread for orders
   # Thread for driving elevator
   return
 
-
+  
+#Open door function
 def elevator_open_door():
   if(driver.elev.elev_get_floor_sensor_signal() != -1):
     elevator_set_speed(0)
@@ -42,8 +45,8 @@ def elevator_open_door():
   driver.elev.elev_set_door_open_lamp(0)
   
   
+#Sets the speed of the elevator, along with changing direction for local elevator  
 def elevator_set_speed(speed):
-
   if (speed > 0):
     print "UP"
     shared.local_elevator.direction = shared.UP
@@ -70,6 +73,7 @@ def elevator_set_speed(speed):
   return
   
   
+#Checks if the elevator should stop in this floor accordingly to orders  
 def elevator_should_stop(floor):
   for key in shared.order_map:
     order = shared.order_map[key]
@@ -81,11 +85,12 @@ def elevator_should_stop(floor):
   return False
     
 
-
+#Returns the dictionary with all elevators    
 def elevator_get_elevators():
   return shared.elevators
  
- 
+
+#If the elevator we found is not in the dictionary already, put in in with its own ID 
 def elevator_merge_network(elevator):
   if not (elevator.el_ID in shared.elevators):
     shared.elevators[elevator.el_ID] = elevator
@@ -113,31 +118,37 @@ def elevator_observer():
   return
   
 
+#Controls the elevator in the right direction, accordingly to the order its supposed to take next
 def elevator_controller(floor, direction):
-  # Drive elevator to order from orderlist
-  if (orderlist.orderlist_empty()):	#If orderlist is empty, set direction to NODIR and speed to 0
-    elevator_set_speed(0)
-    shared.target_dir = shared.NODIR
-    return False
-    
   shared.target_floor = -1
   
-  if(direction == shared.UP):
-    for i in range(shared.N_FLOORS):
-      if (orderlist.orderlist_check_floor(i)):
-        shared.target_floor = i
+  best_cost = 999999999
+  best_order = None
+  for key in shared.order_map:
+    order = shared.order_map[key]
+    if (order.completed):
+      continue
+    if not (order.assigned) or (order.assigned_to_id != shared.get_local_elevator_ID()):
+      continue
+    
+    if (order.floor == floor) and not (orderlist.should_complete(order, floor)):
+      continue
+      
+    cost = orderlist.orderlist_cost_func(order, shared.local_elevator)
+    
+    if (cost < best_cost):
+      best_cost = cost
+      best_order = order
+      
+  if (best_order == None):
+    #print "#1337"
+    return False
   
-  elif (direction == shared.DOWN):
-    for i in range(shared.N_FLOORS):
-      if (orderlist.orderlist_check_floor(i)):
-        shared.target_floor = i
-  
-  if (direction == shared.NODIR) or (shared.target_floor == -1):
-    for i in range(shared.N_FLOORS):
-      if orderlist.orderlist_check_floor(i):
-        shared.target_floor = i
+  shared.target_floor = best_order.floor
+  #print "#1338", best_order.__dict__
 
-  if (shared.target_floor == -1):
+  if (shared.target_floor < 0) or (shared.target_floor >= shared.N_FLOORS):
+    print "Should not be reached"
     elevator_set_speed(0)
     shared.target_dir = shared.NODIR
     return False
@@ -161,6 +172,8 @@ def elevator_controller(floor, direction):
     else:
       elevator_set_speed(0)
       shared.target_dir = shared.NODIR
-      return False
-    return False
+      return True
+  
+  print "Should never reach this"
+  return False
 

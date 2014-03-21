@@ -23,6 +23,7 @@ def Init():
   network_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
   network_socket.bind(('0.0.0.0', UDP_PORT))
   network_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+  print "RCVBUFFER", network_socket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF) 
   
   return
 
@@ -33,8 +34,10 @@ def network_sender(data):
   network_senddata(data)
   time.sleep(2)
 
+  
 def network_senddata(data):
   network_socket.sendto(json.dumps(data), ("129.241.187.255", UDP_PORT))
+  
   
 def network_send_orderlist(order_map):
   liste = []
@@ -57,15 +60,14 @@ def network_send_elevator_state(elevators):
 
   
 def network_send_ping(elevators):
-  liste = []
-  msg_dict = {"type":"ping", "state":shared.elevators[shared.get_local_elevator_ID()].__dict__}
+  msg_dict = {"type":"ping", "state":shared.local_elevator.__dict__}
   network_senddata(msg_dict)
   #print "sender ping", msg_dict
-  
   
 
 #Function for receiving messages
 def network_receiver():
+  last_received = time.time()
   while True:
     msg, adress = network_socket.recvfrom(32000) #receive messages, storing in msg and adress, max size 32000 bit
     if (adress[0] == shared.shared_local_ip()):
@@ -73,13 +75,17 @@ def network_receiver():
     if (len(msg) < 2):
       continue
     
+    delta = time.time() - last_received
+    last_received = time.time()
+    if delta > 1.0:
+      print "The receiver stalled, no packets for", delta, "seconds"
+    
+    if msg[0] != '{':
+      print msg
     msg_dict = json.loads(msg) #Converting from string to python object
-    if msg_dict["type"] == "order": #Checks for different types, order, elevator, lights, ping
-      print "Dette skal ikke komme..."
-      network_receiver_order(msg_dict)
-      
-    elif msg_dict["type"] == "orderlist":
-      #print "Test"
+    
+    if (msg_dict["type"] == "orderlist"):
+      #print "Received orderlist", msg_dict
       network_receive_orderdict(msg_dict)
       #print order_map
     
@@ -87,7 +93,7 @@ def network_receiver():
     # print "Test"
     # network_receive_elevator_state(msg_dict)
       
-    elif msg_dict["type"] == "ping":
+    elif (msg_dict["type"] == "ping"):
       #print "har type ping"
       network_receive_pinger(msg_dict, adress)
 
@@ -95,15 +101,6 @@ def network_receiver():
       print "Received data from", adress, "with payload:", msg_dict
 
       
-def network_receiver_order(msg_dict):
-  print "Received order with floor=",msg_dict["floor"],"and direction=",msg_dict["direction"]
-  order = shared.Order(msg_dict["creatorID"], msg_dict["floor"], msg_dict["direction"], msg_dict["completed"], msg_dict["assigned"], msg_dict["assigned_to_id"], msg_dict["time_completed"])
-  order.ID = msg_dict["ID"]
-  orderlist.orderlist_get_order_map()[order.ID] = order
-  
-  print orderlist.orderlist_get_order_map()
-  
-  
 
 def network_receive_orderdict(msg_dict):
   for order_dict in msg_dict["orders"]:
@@ -131,27 +128,34 @@ def network_receive_pinger(msg_dict, adress):
     print "New elevator found, with ip: ", adress[0]
   
   else:
-    #Change name later!!
-    elevator_state = shared.elevators[ID]
-    elevator_state.last_ping = time.time()
-    elevator_state.last_floor = el["last_floor"]
-    elevator_state.direction = el["direction"]
+    update_el_state = shared.elevators[ID]
+    update_el_state.last_ping = time.time()
+    update_el_state.last_floor = el["last_floor"]
+    update_el_state.direction = el["direction"]
+    #print "Ping"
     
    
     
 def network_sending():
+  last_time = time.time()
   while(True):
+    delta_time = time.time() - last_time
+    last_time = time.time()
+    if delta_time > 1.5:
+      print "Warning, sending thread has stalled!"
     
     network_send_orderlist(orderlist.orderlist_get_order_map())
-    
+    time.sleep(0.3)
+    #print "#1"
     #network_send_elevator_state(elevator.elevator_get_elevators())
     
     network_send_ping(elevator.elevator_get_elevators())
+    time.sleep(0.3)
+    #print "#2"
     
     network_connection_validator()
-    
-    time.sleep(1)
-
+    time.sleep(0.3)
+    #print "#3"
   return
 
   
@@ -162,16 +166,27 @@ def network_connection_validator():
   #print "Sjekker connections"
   lost_ids = []
   for ID in shared.elevators:
-    if ID == shared.get_local_elevator_ID():
+    if (ID == shared.get_local_elevator_ID()):
       continue # can't loose the local elevator
     elevator_state = shared.elevators[ID]
     
-    if time.time() - elevator_state.last_ping > 4.0:
-      print "Lost elevator with id:", ID
-      #TODO take over orders
+    if ((time.time() - elevator_state.last_ping) > 4.0):
+      print "Lost elevator with id:", ID, "which is ", (time.time() - elevator_state.last_ping), " seconds old"
       lost_ids.append(ID)
   for ID in lost_ids:
     del shared.elevators[ID]
+    
+  for ID in lost_ids:
+    for key in orderlist.orderlist_get_order_map():
+        order = orderlist.orderlist_get_order_map()[key]
+        if order.completed:
+          continue
+        if not order.assigned:
+          continue
+        if order.direction == shared.NODIR:
+          continue # Can't reassign command orders
+        if (order.assigned_to_id == ID):
+          orderlist.orderlist_assign_order(order)
       
     
 
@@ -184,7 +199,6 @@ def network_threads():
   
   #shared.shared_local_ip()
   
- 
   
   receiver_thread = threading.Thread(target = network_receiver)
   receiver_thread.start()
