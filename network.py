@@ -39,23 +39,11 @@ def send_orderlist(order_map):
   
   msg_dict = {"type":"orderlist","orders":liste}
   senddata(msg_dict)
-  #print "Sender ordre"
-
-  
-def send_elevator_state(elevators):
-  liste = []
-  for el in shared.elevators:
-    liste.append(shared.elevators[el].__dict__)
-  
-  msg_dict = {"type": "elevator_state", "new_elevators":liste}
-  senddata(msg_dict)
-  #print "Sender elevator_state"
 
   
 def send_ping(elevators):
   msg_dict = {"type":"ping", "state":shared.local_elevator.__dict__}
   senddata(msg_dict)
-  #print "sender ping", msg_dict
   
 
 #Function for receiving messages
@@ -65,7 +53,7 @@ def receiver():
     msg, adress = network_socket.recvfrom(32000) #receive messages, storing in msg and adress, max size 32000 bit
     if (adress[0] == shared.shared_local_ip()):
       continue
-    if (len(msg) < 2):
+    if (len(msg) < 2): 
       continue
     
     delta = time.time() - last_received
@@ -78,12 +66,9 @@ def receiver():
     msg_dict = json.loads(msg) #Converting from string to python object
     
     if (msg_dict["type"] == "orderlist"):
-      #print "Received orderlist", msg_dict
       receive_orderdict(msg_dict)
-      #print order_map
 
     elif (msg_dict["type"] == "ping"):
-      #print "har type ping"
       receive_pinger(msg_dict, adress)
 
     else:
@@ -92,23 +77,13 @@ def receiver():
       
 def receive_orderdict(msg_dict):
   for order_dict in msg_dict["orders"]:
-    #print order_dict
     order = shared.Order(order_dict["creatorID"],order_dict["floor"], order_dict["direction"], order_dict["completed"], order_dict["assigned"], order_dict["assigned_to_id"], order_dict["time_completed"])
     order.ID = order_dict["ID"]
     orderlist.merge_network(order)
-    #print "Test2"
-    
-
-def receive_elevator_state(msg_dict):
-  for el_dict in msg_dict["new_elevators"]:
-    elevator_state = shared.Elevator(el_dict["ip"], orderlist.update_floor(), el_dict["direction"], el_dict["last_ping"], el_dict["el_ID"])
-    elevator.merge_network(elevator_state)
     
    
 def receive_pinger(msg_dict, adress):
-  #print "MSG_DICT", msg_dict
   el = msg_dict["state"]
-  #print "mottar type ping"
   ID = el["el_ID"]
   if not (ID in shared.elevators):
     new_el = shared.Elevator(adress[0],el["last_floor"], el["direction"], time.time(), ID)
@@ -120,7 +95,6 @@ def receive_pinger(msg_dict, adress):
     update_el_state.last_ping = time.time()
     update_el_state.last_floor = el["last_floor"]
     update_el_state.direction = el["direction"]
-    #print "Ping"
     
     
 def sending():
@@ -133,21 +107,17 @@ def sending():
     
     send_orderlist(orderlist.get_order_map())
     time.sleep(0.3)
-    #print "#1"
-    #network_send_elevator_state(elevator.elevator_get_elevators())
     
     send_ping(elevator.get_elevators())
     time.sleep(0.3)
-    #print "#2"
     
     connection_validator()
     time.sleep(0.3)
-    #print "#3"
+    
   return
   
 
 def connection_validator():
-  #print "Sjekker connections"
   lost_ids = []
   for ID in shared.elevators:
     if (ID == shared.get_local_elevator_ID()):
@@ -174,10 +144,6 @@ def connection_validator():
       
 
 def network_threads():
-  #global network_socket
-  
-  #shared.shared_local_ip()
-  
   
   receiver_thread = threading.Thread(target = receiver)
   receiver_thread.start()

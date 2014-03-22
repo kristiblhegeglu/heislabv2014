@@ -25,6 +25,7 @@ order_map = {}
 elevators = {}
 
 
+#Creates the class Order, including all the important information about the different orders
 class Order:
   def __init__(self, creatorID, floor, direction, completed,assigned, assigned_to_id, time_completed):
     self.ID = create_random_ID()
@@ -36,7 +37,6 @@ class Order:
     self.assigned_to_id = assigned_to_id
     self.time_completed = time_completed
 
-    
   def ToString(self):
     out = "Order[floor:"+str(self.floor)+",direction="+str(self.direction)
     
@@ -52,10 +52,11 @@ class Order:
     return json.dumps(order_dict)
 
 
+#Creates the class Elevator, including all the important information about the states    
 class Elevator:
   def __init__(self, ip_adress, last_floor, direction, last_ping, elevator_id):
     self.ip = ip_adress
-    self.last_floor = last_floor #changes later to last_floor
+    self.last_floor = last_floor 
     self.direction = direction
     self.last_ping = last_ping
     self.el_ID = elevator_id
@@ -64,13 +65,14 @@ class Elevator:
 local_elevator_ID = 0
 
 
+#Initializes the local_elevators
 def Init():
   global local_elevator_ID
   global local_elevator
   global elevators
   random.seed()
  
-  local_elevator_ID = shared_local_ip().split('.')[3]
+  local_elevator_ID = shared_local_ip().split('.')[3]   #The local_elevator_ID is equal to the last three numbers of the IP adress
   print "My id", local_elevator_ID
   local_elevator = Elevator(shared_local_ip(), 0, NODIR, 0, get_local_elevator_ID())
   elevators[get_local_elevator_ID()] = local_elevator
@@ -83,7 +85,8 @@ def get_local_elevator_ID():
 def create_random_ID():
   return random.randint(0, 1000000000)
 
- 
+
+#Used to find the local ip for all the elevators  
 def shared_local_ip():
   global our_ip
   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

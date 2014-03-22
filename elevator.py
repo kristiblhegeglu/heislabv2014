@@ -7,7 +7,6 @@ import time
 
 #Initializes the elevator, drives down to ground floor before taking any orders
 def Init():
-  #shared.elevators
   
   if not (driver.elev.elev_init()):
     print "Failed to initialize"
@@ -27,13 +26,6 @@ def Init():
   time.sleep(1)
   
   return
-  
-  
-def Start():
-  # Listen from driver
-  # Thread for orders
-  # Thread for driving elevator
-  return
 
   
 #Open door function
@@ -48,13 +40,11 @@ def open_door():
 #Sets the speed of the elevator, along with changing direction for local elevator  
 def set_speed(speed):
   if (speed > 0):
-    print "UP"
     shared.local_elevator.direction = shared.UP
     shared.last_dir = shared.UP
     driver.elev.elev_set_speed(300)
   
   elif (speed < 0):
-    print "DOWN"
     shared.local_elevator.direction = shared.DOWN
     shared.last_dir = shared.DOWN
     driver.elev.elev_set_speed(-300)
@@ -62,7 +52,6 @@ def set_speed(speed):
   if (speed == 0):
     if (shared.local_elevator.direction == shared.UP):
       driver.elev.elev_set_speed(-300)
-      print "hei, jeg skal stoppe"
     
     elif (shared.local_elevator.direction == shared.DOWN):
       driver.elev.elev_set_speed(300)
@@ -120,11 +109,9 @@ def controller(floor, direction):
       best_order = order
       
   if (best_order == None):
-    #print "#1337"
     return False
   
   shared.target_floor = best_order.floor
-  #print "#1338", best_order.__dict__
 
   if (shared.target_floor < 0) or (shared.target_floor >= shared.N_FLOORS):
     print "Should not be reached"
